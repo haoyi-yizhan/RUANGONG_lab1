@@ -1,0 +1,136 @@
+@startuml
+' 实验二 类图：活动票务与报名系统（核心领域模型，14 个类）
+' 对应 requirements.md REQ-001 ~ REQ-024
+' 布局说明（阅读顺序 = 从上到下）：
+'   右上：用户 + 四个角色（泛化箭头向上指向用户，教科书惯例）
+'   中轴：«同一类»组织者提交 → 活动 → 场次 → 票档 → 订单 → 审计日志（垂直向下）
+'   左列：与主链各环节一一对应的记录（检票记录/候补记录/退款），«同一类»参与者挂在订单旁
+' 模块归属用底色区分：蓝=M1 账号与权限 绿=M2 活动发布与审核
+' 橙=M4+M5 交易 紫=M6+M7 现场与运营 灰=M8 平台支撑
+' 参与者带构造型 «同一类» 的副本出现在订单旁，使"购买"成为局部短线
+' 订单状态的 9 个取值完整展开见状态图；审计日志只画订单一条写入线作为代表
+' 数据完整性：按 REQ-004/007/008/016/019/021 自查，补全 密码哈希/支付截止时间/
+' 主演或主讲/起售时间/退款状态/操作时间/候补人关联
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam ArrowColor #4B5563
+skinparam BorderColor #7C8AA0
+skinparam TitleFontSize 19
+skinparam TitleFontColor #334155
+skinparam NoteFontSize 13
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #7C8AA0
+skinparam classHeaderBackgroundColor #EEF2F7
+skinparam classAttributeIconSize 0
+skinparam nodesep 52
+skinparam ranksep 62
+hide circle
+hide empty members
+
+title 活动票务与报名系统 · 类图
+
+class "参与者" as P2 <<同一类>> #EEF3FA
+class "组织者" as O2 <<同一类>> #EEF3FA
+
+class 用户 #EEF3FA {
+  - 手机号: string
+  - 密码哈希: string
+  - 角色: 参与者/组织者/检票人员/管理员
+  - 姓名: string
+  - 身份证号: string
+  - 状态: 正常/封禁
+  + 登录(): bool
+}
+class 审核记录 #EDF6EE {
+  - 轮次: int
+  - 结论: 通过/驳回
+  - 驳回原因: string
+}
+class 参与者 #EEF3FA
+class 检票人员 #EEF3FA
+class 平台管理员 #EEF3FA
+class 组织者 #EEF3FA
+class O2 #EEF3FA
+class 活动 #EDF6EE {
+  - 名称: string
+  - 主演或主讲: string
+  - 类型: 付费演出/讲座
+  - 状态: 待审核→…→已结束
+  + 提交申请(): void
+  + 申请改期(时间, 地点): void
+  + 申请取消(): void
+}
+class 场次 #EDF6EE {
+  - 开始时间 / 地点: datetime
+  - 起售时间: datetime
+  - 报名截止时间: datetime
+  - 签到窗口是否开启: bool
+  + 可售余票(): int
+  + 上座率(): decimal
+}
+class 检票记录 #F3EEFA {
+  - 核验时间: datetime
+  - 核验结果: 放行/重复/无效/未开窗
+  - 检票员: string
+}
+class 票档 #EDF6EE {
+  - 名称 / 价格: string
+  - 总量 / 已售数: int
+  + 扣减(): bool
+}
+class 候补记录 #FDF4E8 {
+  - 排队序号: int
+  - 预付金额: decimal
+  + 递补(): 订单
+  + 退出(): void
+}
+class 订单 #FDF4E8 {
+  - 座位号: string
+  - 票码: string
+  - 实付金额: decimal
+  - 支付结果: 成功/失败
+  - 支付截止时间: datetime
+  - 状态: 见状态图（9 种）
+  + 出票(座位号, 票码): void
+  + 退票(): decimal
+  + 关闭(): void
+}
+class 退款 #FDF4E8 {
+  - 退款金额: decimal
+  - 手续费: decimal
+  - 状态: 处理中/已到账
+  - 原因: 退票/活动取消/改期/候补失败
+}
+class 审计日志 #F2F2F2 {
+  - 操作者: string
+  - 操作时间: datetime
+  - 动作: string
+  - 对象: string
+  - 状态前后值: string
+  + 追加(): void  不可删改
+}
+
+' ===== 右上：角色泛化到用户（箭头向上，教科书惯例）=====
+参与者 -up-|> 用户
+检票人员 -up-|> 用户
+平台管理员 -up-|> 用户
+组织者 -up-|> 用户
+
+' ===== 中轴：O2提交活动，活动→场次→票档→订单→审计 垂直向下 =====
+O2 -down-> 活动 : 提交
+活动 -up-> 审核记录 : 多轮审核
+活动 "1" *-down- "1..*" 场次 : 包含
+场次 "1" *-down- "1..*" 票档 : 设置
+票档 "1" -down- "*" 订单 : 售出
+订单 -down-> 审计日志 : 状态变更写入
+
+' ===== 左列记录：与主链各环节水平相连 =====
+场次 "1" -left- "*" 检票记录 : 核销
+票档 "1" -right- "*" 候补记录 : 排队
+参与者 "1" -down- "*" 候补记录
+P2 "1" -right- "*" 订单 : 购买
+订单 -right- "0..1" 退款
+
+@enduml

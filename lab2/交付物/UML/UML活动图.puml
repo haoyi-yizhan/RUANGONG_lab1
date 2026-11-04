@@ -1,0 +1,62 @@
+@startuml
+' 实验二：活动图（购票主流程）
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam ArrowColor #4B5563
+skinparam BorderColor #7C8AA0
+skinparam TitleFontSize 17
+skinparam TitleFontColor #334155
+skinparam NoteBackgroundColor #FBF9F1
+skinparam NoteBorderColor #D8D2BE
+skinparam NoteFontSize 11
+skinparam activityBackgroundColor #FFFFFF
+skinparam activityBorderColor #7C8AA0
+skinparam activityDiamondBackgroundColor #F2F5F9
+skinparam activityDiamondBorderColor #7C8AA0
+skinparam swimlaneBorderColor #A8B4C4
+skinparam swimlaneTitleBackgroundColor #EEF2F7
+skinparam activityStartColor #334155
+skinparam activityEndColor #334155
+skinparam nodesep 30
+skinparam ranksep 40
+
+title 活动票务与报名系统 · 活动图（购票主流程）
+
+|参与者|
+start
+:选择场次与票档;
+:提交订单;
+
+|售票模块|
+if (票档有余票？) then (有)
+  :扣减余票并创建订单;
+  :进入待支付（3 分钟倒计时）;
+  while (未支付且未超时) is (每 10 秒轮询)
+    :查询支付结果;
+  endwhile
+  if (支付成功？) then (是)
+    fork
+      :按票档统一分配座位
+      并生成唯一票码;
+    fork again
+      :写入审计日志;
+    end fork
+    :订单转为已出票;
+  else (否)
+    :关闭订单并释放名额;
+    |候补与退款模块|
+    :通知该票档候补队列首位;
+    :递补出票;
+  endif
+else (无)
+  |候补与退款模块|
+  :提交候补并预付全款;
+  :加入该票档队列队尾;
+endif
+
+stop
+
+@enduml

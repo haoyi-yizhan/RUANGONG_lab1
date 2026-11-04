@@ -1,0 +1,59 @@
+@startuml
+' 实验二：状态图（订单）
+' 布局：left to right，时间从左向右流。主链 [*]→待支付→已出票→已签到→已核销→[*]；
+'       超时关闭钉在待支付上方，活动取消退款钉在已出票正下方（-right- 平行边），
+'       两条提前退场线沿顶边、底边对称汇入结束节点；候补退出的弧线因此贴底短行。
+' 说明：米色框 = 终态（REQ-023 规定不可再转换），右下图例说明；
+'       ltr 模式下方向提示旋转 90°：-down- 实际向右，-left- 实际向上，-right- 实际向下。
+left to right direction
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam ArrowColor #4B5563
+skinparam ArrowFontSize 13
+skinparam BorderColor #7C8AA0
+skinparam TitleFontSize 19
+skinparam TitleFontColor #334155
+skinparam NoteBackgroundColor #FBF9F1
+skinparam NoteBorderColor #D8D2BE
+skinparam stateBackgroundColor #F2F5F9
+skinparam stateBorderColor #7C8AA0
+skinparam nodesep 30
+skinparam ranksep 55
+
+title 活动票务与报名系统 · 状态图（订单）
+
+state 已关闭 #FBF9F1
+state 已取消 #FBF9F1
+state 已缺席 #FBF9F1
+state 已退款 #FBF9F1
+state 已核销 #FBF9F1
+
+' ltr 模式方向提示旋转 90°：-down- 实际向右，-left- 实际向上
+[*] -down-> 待支付
+[*] --> 候补中 : 提交候补并预付全款
+
+待支付 -left-> 已关闭 : 超时未支付
+
+待支付 -down-> 已出票 : 3 分钟内支付成功
+候补中 -down-> 已出票 : 递补成功
+
+已出票 --> 已取消 : 距开演超过 3 天退票
+已出票 -down-> 已签到 : 检票核销通过
+已出票 --> 已缺席 : 演出结束仍未检票
+候补中 -down-> 已退款 : 主动退出或截止未递补
+已出票 -right-> 已退款 : 活动取消或改期后选择退款
+
+已签到 -down-> 已核销 : 演出结束
+
+已关闭 --> [*]
+已取消 --> [*]
+已缺席 --> [*]
+已退款 --> [*]
+已核销 --> [*]
+
+legend right
+  米色框 = 终态：不可再转换
+endlegend
+@enduml

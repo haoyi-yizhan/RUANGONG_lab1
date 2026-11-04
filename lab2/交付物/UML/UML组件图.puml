@@ -1,0 +1,78 @@
+@startuml
+' 实验二：组件图
+' 布局按调用方向分四层：顶部四类角色用户 → 对外接口与发起调用的模块 →
+' 被依赖的售票(M4，全局枢纽)与活动发布与审核(M2) → 底部平台支撑(M8)与模拟支付。
+' 依赖方向自上而下，全程无交叉。
+' 说明1：登录/下单是被多方复用的服务能力，抽象为接口画在系统框内、紧贴所属模块；
+'        核销仅检票人员一人使用，由角色直达检票(M6)，不设接口符号——避免接口挂接线与角色线交叉。
+' 说明2：模拟支付是系统内的站内模拟支付组件（REQ-007，本项目不接入真实支付），
+'        独立成组件以便日后替换真实支付；不是外部系统。
+' 说明3：模块框内第二行小字为该模块的代表性职责（与第2章模块划分对应）。
+' 说明4：标记 [hidden] 的锚点边仅用于定位，不表达任何关系。
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 14
+skinparam shadowing false
+skinparam ArrowColor #4B5563
+skinparam BorderColor #7C8AA0
+skinparam TitleFontSize 19
+skinparam TitleFontColor #334155
+skinparam nodesep 30
+skinparam ranksep 60
+skinparam componentStyle rectangle
+skinparam componentBackgroundColor #FFFFFF
+skinparam componentBorderColor #7C8AA0
+skinparam interfaceBackgroundColor #F2F5F9
+skinparam interfaceBorderColor #7C8AA0
+
+title 活动票务与报名系统 · 组件图
+
+package "活动票务与报名系统" {
+  component "**账号与权限 (M1)**\n<size:11>注册登录 · 实名认证 · 封禁</size>" as M1
+  component "**活动发布与审核 (M2)**\n<size:11>申请受理 · 审核流转</size>" as M2
+  component "**查询展示 (M3)**\n<size:11>演出查询 · 余票展示</size>" as M3
+  component "**售票 (M4)**\n<size:11>限购校验 · 出票 · 支付对接</size>" as M4
+  component "**候补与退款 (M5)**\n<size:11>候补队列 · 递补 · 退款</size>" as M5
+  component "**检票 (M6)**\n<size:11>票码核验 · 窗口控制</size>" as M6
+  component "**统计与导出 (M7)**\n<size:11>场次统计 · 名单导出</size>" as M7
+  component "**平台支撑 (M8)**\n<size:11>审计日志 · 站内通知</size>" as M8
+  component "**模拟支付**\n<size:11>模拟收单 · 原路退回</size>" as PAY
+
+  ' 对外提供的服务接口（系统框内，紧贴所属模块）：只留给被多方复用的能力
+  () "登录" as API_LOGIN
+  () "下单" as API_ORDER
+}
+
+actor "四类角色用户\n(参与者/组织者/\n检票人员/管理员)" as U
+
+' ===== 角色入口（穿过系统边界触达接口/模块）=====
+U -down-> API_LOGIN : 注册登录
+U -down-> M3 : 查询演出
+U -down-> M6 : 核销票码
+
+' ===== 接口挂接 =====
+API_LOGIN -down- M1
+M4 -right- API_ORDER
+
+' ===== 模块依赖（使用者 ..> 被依赖者）=====
+M3 ..> M2 : 查询活动
+M3 ..> M4 : 查询余票
+M7 ..> M4 : 读取售票数据
+M6 ..> M4 : 核验票码
+M5 ..> M4 : 释放名额
+M5 ..> API_ORDER : 递补复用下单
+M4 ..> PAY : 发起模拟支付
+M4 ..> M8 : 写审计日志
+M2 ..> M8 : 发送站内通知
+
+' ===== 布局锚点（仅定位，不表达关系）=====
+M1 -[hidden]right- M3
+M3 -[hidden]right- M7
+M7 -[hidden]right- M6
+M6 -[hidden]right- M5
+M3 -[hidden]down- M2
+M6 -[hidden]down- M4
+M2 -[hidden]right- M4
+M2 -[hidden]down- M8
+M8 -[hidden]right- PAY
+@enduml
