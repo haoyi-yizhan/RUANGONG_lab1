@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const state = { user: null, page: 'events', events: [], orders: [], refresh: null };
 const content = document.querySelector('#content');
@@ -485,10 +485,3 @@ setInterval(() => { if (!dialog.open && !document.hidden && state.refresh) state
   catch (error) { showNotice(error.message, true); }
   await render();
 })();
-
-
-
-
-
-
-
