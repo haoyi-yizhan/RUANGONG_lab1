@@ -1,0 +1,74 @@
+@startuml
+' 实验二：时序图（退票与自动递补）
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam ArrowColor #4B5563
+skinparam BorderColor #7C8AA0
+skinparam TitleFontSize 17
+skinparam TitleFontColor #334155
+skinparam NoteBackgroundColor #FBF9F1
+skinparam NoteBorderColor #D8D2BE
+skinparam NoteFontSize 11
+skinparam sequenceMessageAlign left
+skinparam sequenceParticipantBackgroundColor #EEF2F7
+skinparam sequenceParticipantBorderColor #7C8AA0
+skinparam sequenceLifeLineBorderColor #A8B4C4
+skinparam sequenceArrowColor #4B5563
+skinparam sequenceGroupBackgroundColor #FAFBFD
+skinparam sequenceGroupBorderColor #A8B4C4
+skinparam sequenceActivationBackgroundColor #DCE5F0
+skinparam sequenceActivationBorderColor #7C8AA0
+
+title 活动票务与报名系统 · 时序图（退票与自动递补）
+
+participant "参与者" as Buyer
+participant "我的订单界面" as UI
+participant "候补退款服务" as RefundSvc
+participant "订单" as Order
+participant "票档" as Tier
+participant "候补记录" as Wait
+participant "站内通知" as Notify
+participant "审计日志" as Audit
+
+Buyer -> UI : 点击「申请退票」
+activate UI
+UI -> RefundSvc : 退票(订单号)
+activate RefundSvc
+
+RefundSvc -> Order : 查询状态与开演时间
+activate Order
+Order --> RefundSvc : 已出票，距开演 5 天
+deactivate Order
+
+RefundSvc -> RefundSvc : 按阶梯规则计算手续费（40%）
+
+alt 距开演超过 3 天，允许退票
+  RefundSvc -> Order : 转为已取消
+  RefundSvc -> Tier : 释放 1 个名额
+  RefundSvc -> RefundSvc : 生成退款（实付 − 手续费）
+  RefundSvc -> Notify : 通知退票结果
+
+  RefundSvc -> Wait : 取队首候补记录
+  activate Wait
+  loop 队列非空且该票档有余票
+    Wait --> RefundSvc : 候补记录
+    RefundSvc -> Order : 创建订单并转为已出票
+    RefundSvc -> Notify : 推送递补成功通知
+    RefundSvc -> Wait : 取下一位
+  end
+  deactivate Wait
+
+else 不足 3 天或已开演
+  RefundSvc --> UI : 拒绝退票并提示原因
+end
+
+RefundSvc -> Audit : 写入退票与递补审计日志
+deactivate RefundSvc
+
+UI --> Buyer : 显示退票结果
+deactivate UI
+
+@enduml

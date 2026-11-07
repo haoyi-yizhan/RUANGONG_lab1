@@ -1,0 +1,15 @@
+{
+  "browser": "Microsoft Edge headless",
+  "passed": true,
+  "scenarios": [
+    "home rendering",
+    "form login",
+    "rules disclosure",
+    "create order",
+    "simulated payment",
+    "refund 80.00",
+    "mobile layout"
+  ],
+  "runtimeErrors": [],
+  "completedAt": "2026-11-07T02:59:07.151Z"
+}

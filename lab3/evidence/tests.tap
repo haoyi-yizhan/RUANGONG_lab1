@@ -1,0 +1,150 @@
+TAP version 13
+# (node:45272) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: registration protects credentials, prevents duplicate identities and supports recovery
+ok 1 - registration protects credentials, prevents duplicate identities and supports recovery
+  ---
+  duration_ms: 1516.363
+  type: 'test'
+  ...
+# Subtest: payment is idempotent and unique real-name purchases are enforced
+ok 2 - payment is idempotent and unique real-name purchases are enforced
+  ---
+  duration_ms: 666.1474
+  type: 'test'
+  ...
+# Subtest: payment expires at 180 seconds and releases inventory
+ok 3 - payment expires at 180 seconds and releases inventory
+  ---
+  duration_ms: 880.1379
+  type: 'test'
+  ...
+# Subtest: refund advances waitlist in FIFO order and withdrawal returns full prepayment
+ok 4 - refund advances waitlist in FIFO order and withdrawal returns full prepayment
+  ---
+  duration_ms: 1166.6327
+  type: 'test'
+  ...
+# Subtest: refund boundary at 7 days
+ok 5 - refund boundary at 7 days
+  ---
+  duration_ms: 779.2549
+  type: 'test'
+  ...
+# Subtest: refund boundary at 3 days
+ok 6 - refund boundary at 3 days
+  ---
+  duration_ms: 512.4203
+  type: 'test'
+  ...
+# Subtest: refund boundary at 2.999999988425926 days
+ok 7 - refund boundary at 2.999999988425926 days
+  ---
+  duration_ms: 515.8296
+  type: 'test'
+  ...
+# Subtest: review and order access enforce roles; banning blocks login and operations
+ok 8 - review and order access enforce roles; banning blocks login and operations
+  ---
+  duration_ms: 981.7671
+  type: 'test'
+  ...
+# Subtest: cancellation remains subject to review and refunds paid and waiting orders in full
+ok 9 - cancellation remains subject to review and refunds paid and waiting orders in full
+  ---
+  duration_ms: 883.8038
+  type: 'test'
+  ...
+# Subtest: an interrupted refund rolls back its payment and ticket state together
+ok 10 - an interrupted refund rolls back its payment and ticket state together
+  ---
+  duration_ms: 803.3598
+  type: 'test'
+  ...
+# Subtest: 50 simultaneous HTTP purchases reserve one seat and queue the other 49
+ok 11 - 50 simultaneous HTTP purchases reserve one seat and queue the other 49
+  ---
+  duration_ms: 17390.8478
+  type: 'test'
+  ...
+# Subtest: approved reschedule updates the session and grants a full refund
+ok 12 - approved reschedule updates the session and grants a full refund
+  ---
+  duration_ms: 791.9716
+  type: 'test'
+  ...
+# Subtest: unverified purchase is rejected; failed payment can retry and timeout promotes the waitlist
+ok 13 - unverified purchase is rejected; failed payment can retry and timeout promotes the waitlist
+  ---
+  duration_ms: 1100.3965
+  type: 'test'
+  ...
+# Subtest: waitlist deadline refunds prepayment
+ok 14 - waitlist deadline refunds prepayment
+  ---
+  duration_ms: 655.0419
+  type: 'test'
+  ...
+# Subtest: check-in rejects invalid, closed, wrong identity, cancelled and repeated tickets; completion marks attendance and absence
+ok 15 - check-in rejects invalid, closed, wrong identity, cancelled and repeated tickets; completion marks attendance and absence
+  ---
+  duration_ms: 1128.3486
+  type: 'test'
+  ...
+# Subtest: roster excludes identity numbers, respects ownership, and audit is immutable
+ok 16 - roster excludes identity numbers, respects ownership, and audit is immutable
+  ---
+  duration_ms: 666.1947
+  type: 'test'
+  ...
+# Subtest: a refunded attendee can buy again and published events cannot be resubmitted for price changes
+ok 17 - a refunded attendee can buy again and published events cannot be resubmitted for price changes
+  ---
+  duration_ms: 581.5259
+  type: 'test'
+  ...
+# Subtest: scheduled event automatically publishes and same user can purchase different sessions
+ok 18 - scheduled event automatically publishes and same user can purchase different sessions
+  ---
+  duration_ms: 485.6387
+  type: 'test'
+  ...
+# Subtest: process termination rolls back an uncommitted order after reopening the database
+ok 19 - process termination rolls back an uncommitted order after reopening the database
+  ---
+  duration_ms: 351.198
+  type: 'test'
+  ...
+# Subtest: downtime replays pending expiry before waitlist deadline, then marks the promoted ticket absent
+ok 20 - downtime replays pending expiry before waitlist deadline, then marks the promoted ticket absent
+  ---
+  duration_ms: 817.1909
+  type: 'test'
+  ...
+# Subtest: approved reschedule handles tickets already checked in
+ok 21 - approved reschedule handles tickets already checked in
+  ---
+  duration_ms: 1020.7077
+  type: 'test'
+  ...
+# Subtest: approved cancel handles tickets already checked in
+ok 22 - approved cancel handles tickets already checked in
+  ---
+  duration_ms: 1166.6611
+  type: 'test'
+  ...
+# Subtest: purchased statistics count distinct attendees with issued tickets, excluding withdrawn waitlist entries
+ok 23 - purchased statistics count distinct attendees with issued tickets, excluding withdrawn waitlist entries
+  ---
+  duration_ms: 967.8617
+  type: 'test'
+  ...
+1..23
+# tests 23
+# suites 0
+# pass 23
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 36351.6576

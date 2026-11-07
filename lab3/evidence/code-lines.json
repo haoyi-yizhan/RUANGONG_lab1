@@ -1,0 +1,64 @@
+{
+  "timestamp": "2026-11-07T03:01:18.034Z",
+  "method": "Approximate nonblank, non-comment-only lines in handwritten src and public files; JavaScript total excludes HTML and CSS. Comment detection is heuristic.",
+  "applicationJavaScript": 1792,
+  "total": 1904,
+  "files": [
+    {
+      "file": "public/app.js",
+      "lines": 485
+    },
+    {
+      "file": "public/index.html",
+      "lines": 30
+    },
+    {
+      "file": "public/style.css",
+      "lines": 82
+    },
+    {
+      "file": "src/auth.mjs",
+      "lines": 106
+    },
+    {
+      "file": "src/database.mjs",
+      "lines": 162
+    },
+    {
+      "file": "src/errors.mjs",
+      "lines": 31
+    },
+    {
+      "file": "src/events.mjs",
+      "lines": 189
+    },
+    {
+      "file": "src/operations.mjs",
+      "lines": 135
+    },
+    {
+      "file": "src/queries.mjs",
+      "lines": 118
+    },
+    {
+      "file": "src/security.mjs",
+      "lines": 37
+    },
+    {
+      "file": "src/server.mjs",
+      "lines": 221
+    },
+    {
+      "file": "src/support.mjs",
+      "lines": 76
+    },
+    {
+      "file": "src/system.mjs",
+      "lines": 66
+    },
+    {
+      "file": "src/trading.mjs",
+      "lines": 166
+    }
+  ]
+}

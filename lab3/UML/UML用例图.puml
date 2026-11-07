@@ -1,0 +1,89 @@
+@startuml
+' 实验二 用例图：活动票务与报名系统
+' 四类角色各自的用例 + include/extend
+' 说明1：未画系统边界框——图题已表明系统范围，且用例按角色分组排列，边界自明
+' 说明2：布局为四层——左上组织者、右上平台管理员（两者同高），中间参与者，底部检票人员；
+'        每个角色的用例贴着角色扇出，读图顺序即"治理在上、交易居中、现场垫底"
+' 说明3：left to right 模式下方向提示整体旋转 90°：-down- 实际向右、-right- 实际向下、
+'        -up- 实际向左、-left- 实际向上；下文锚点边均按此书写
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam ArrowColor #4B5563
+skinparam BorderColor #7C8AA0
+skinparam TitleFontSize 19
+skinparam TitleFontColor #334155
+skinparam NoteBackgroundColor #FBF9F1
+skinparam NoteBorderColor #D8D2BE
+skinparam NoteFontSize 13
+left to right direction
+skinparam usecaseBackgroundColor #F2F5F9
+skinparam usecaseBorderColor #7C8AA0
+skinparam actorBorderColor #4B5563
+skinparam actorBackgroundColor #FFFFFF
+skinparam nodesep 30
+skinparam ranksep 42
+
+title 活动票务与报名系统 · 用例图
+
+actor "组织者" as Organizer
+usecase "提交演出申请" as UC_APPLY
+usecase "申请改期或取消" as UC_CHANGE
+usecase "查看统计并导出名单" as UC_STAT
+
+actor "参与者" as Buyer
+usecase "注册登录" as UC_REG
+usecase "查询演出" as UC_SEARCH
+usecase "购票" as UC_BUY
+usecase "候补" as UC_WAIT
+usecase "自助退票" as UC_REFUND
+
+actor "检票人员" as Checker
+usecase "核销票码" as UC_SCAN
+
+actor "平台管理员" as Admin
+usecase "审核演出申请" as UC_REVIEW
+usecase "开启签到窗口" as UC_WINDOW
+usecase "封禁账号" as UC_BAN
+usecase "查询审计日志" as UC_AUDIT
+
+usecase "实名认证" as UC_REAL
+usecase "实名限购校验" as UC_LIMIT
+usecase "校验签到窗口" as UC_WINCHK
+
+Organizer -- UC_APPLY
+Organizer -- UC_CHANGE
+Organizer -- UC_STAT
+Buyer -- UC_REG
+Buyer -- UC_SEARCH
+Buyer -- UC_BUY
+Buyer -- UC_WAIT
+Buyer -- UC_REFUND
+Checker -- UC_SCAN
+Admin -down- UC_REVIEW
+Admin -down- UC_WINDOW
+Admin -down- UC_BAN
+Admin -down- UC_AUDIT
+
+UC_REG ..> UC_REAL : <<include>>
+UC_BUY ..> UC_LIMIT : <<include>>
+UC_SCAN ..> UC_WINCHK : <<include>>
+UC_WAIT ..> UC_BUY : <<extend>>
+
+' 布局锚点（仅用于定位，不表达任何关系）：
+' ① 两个角色间隐藏边固定左列从上到下的顺序：组织者 → 参与者 → 检票人员
+Organizer -[hidden]right- Buyer
+Buyer -[hidden]right- Checker
+' ② 把平台管理员钉到顶部高度带（组织者首用例的右侧）
+UC_APPLY -[hidden]down- Admin
+' ③ 三条隐藏链把管理员的 4 个用例按业务顺序钉成其右侧一列（自上而下）
+UC_REVIEW -[hidden]right- UC_WINDOW
+UC_WINDOW -[hidden]right- UC_BAN
+UC_BAN -[hidden]right- UC_AUDIT
+
+note bottom of UC_WINCHK
+  窗口未开启时核销应被拒绝
+end note
+
+@enduml

@@ -1,0 +1,30 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>聚场 · 活动票务平台</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#events"><span class="brand-mark">聚</span><span>聚场<small>MEET & MOMENT</small></span></a>
+      <div class="side-label">探索与管理</div>
+      <nav id="navigation" aria-label="主导航"></nav>
+      <div class="sidebar-bottom"><span class="status-dot"></span> 让每一次相聚都有意义</div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div><span class="eyebrow">WELCOME TO JUCHANG</span><h1 id="page-title">发现活动</h1></div>
+        <div class="top-actions"><span id="user-badge" class="user-badge">访客</span><button id="account-button" class="button secondary">登录 / 注册</button></div>
+      </header>
+      <div id="notice" role="status" aria-live="polite"></div>
+      <section id="content"></section>
+      <footer>聚场 · 发现值得到场的每一刻</footer>
+    </main>
+  </div>
+  <dialog id="dialog"><div id="dialog-content"></div></dialog>
+  <script src="/app.js" defer></script>
+</body>
+</html>

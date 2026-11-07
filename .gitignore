@@ -1,0 +1,6 @@
+lab3/data/
+lab3/dist/
+lab3/artifacts/
+*.sqlite-wal
+*.sqlite-shm
+*.log

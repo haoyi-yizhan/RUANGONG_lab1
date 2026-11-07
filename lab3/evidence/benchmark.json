@@ -1,0 +1,526 @@
+{
+  "timestamp": "2026-11-07T02:48:49.690Z",
+  "environment": {
+    "node": "v22.17.0",
+    "os": "win32",
+    "osRelease": "10.0.26200",
+    "architecture": "x64",
+    "cpu": "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz",
+    "logicalCpus": 8
+  },
+  "query": "Authenticated GET /api/orders for a user with 10,000 closed orders; each response returns at most 500 orders.",
+  "summary": {
+    "fixtureOrders": 10000,
+    "concurrency": 20,
+    "queries": 100,
+    "passedWithin2Seconds": 100,
+    "failed": 0,
+    "p50Ms": 301.26930000000016,
+    "p95Ms": 441.83180000000004,
+    "maxMs": 457.3769,
+    "elapsedMs": 1564.1818,
+    "meetsRequirement": true
+  },
+  "results": [
+    {
+      "request": 1,
+      "ms": 283.05100000000004,
+      "success": true
+    },
+    {
+      "request": 2,
+      "ms": 282.6598,
+      "success": true
+    },
+    {
+      "request": 3,
+      "ms": 288.7747,
+      "success": true
+    },
+    {
+      "request": 4,
+      "ms": 293.62600000000003,
+      "success": true
+    },
+    {
+      "request": 5,
+      "ms": 303.37620000000004,
+      "success": true
+    },
+    {
+      "request": 6,
+      "ms": 308.04990000000004,
+      "success": true
+    },
+    {
+      "request": 7,
+      "ms": 313.25519999999995,
+      "success": true
+    },
+    {
+      "request": 8,
+      "ms": 318.4783,
+      "success": true
+    },
+    {
+      "request": 9,
+      "ms": 324.19440000000003,
+      "success": true
+    },
+    {
+      "request": 10,
+      "ms": 331.0712,
+      "success": true
+    },
+    {
+      "request": 11,
+      "ms": 335.76460000000003,
+      "success": true
+    },
+    {
+      "request": 12,
+      "ms": 339.74620000000004,
+      "success": true
+    },
+    {
+      "request": 13,
+      "ms": 346.0596,
+      "success": true
+    },
+    {
+      "request": 14,
+      "ms": 351.0682,
+      "success": true
+    },
+    {
+      "request": 15,
+      "ms": 368.01840000000004,
+      "success": true
+    },
+    {
+      "request": 16,
+      "ms": 380.85389999999995,
+      "success": true
+    },
+    {
+      "request": 17,
+      "ms": 386.17800000000005,
+      "success": true
+    },
+    {
+      "request": 18,
+      "ms": 390.0106,
+      "success": true
+    },
+    {
+      "request": 19,
+      "ms": 393.91239999999993,
+      "success": true
+    },
+    {
+      "request": 20,
+      "ms": 398.5153,
+      "success": true
+    },
+    {
+      "request": 21,
+      "ms": 457.3769,
+      "success": true
+    },
+    {
+      "request": 22,
+      "ms": 453.0279999999999,
+      "success": true
+    },
+    {
+      "request": 23,
+      "ms": 450.0842,
+      "success": true
+    },
+    {
+      "request": 24,
+      "ms": 448.6417,
+      "success": true
+    },
+    {
+      "request": 25,
+      "ms": 442.5828999999999,
+      "success": true
+    },
+    {
+      "request": 26,
+      "ms": 441.83180000000004,
+      "success": true
+    },
+    {
+      "request": 27,
+      "ms": 439.24969999999996,
+      "success": true
+    },
+    {
+      "request": 28,
+      "ms": 436.2232,
+      "success": true
+    },
+    {
+      "request": 29,
+      "ms": 432.07810000000006,
+      "success": true
+    },
+    {
+      "request": 30,
+      "ms": 426.8505999999999,
+      "success": true
+    },
+    {
+      "request": 31,
+      "ms": 425.91869999999994,
+      "success": true
+    },
+    {
+      "request": 32,
+      "ms": 429.4257,
+      "success": true
+    },
+    {
+      "request": 33,
+      "ms": 425.81679999999994,
+      "success": true
+    },
+    {
+      "request": 34,
+      "ms": 422.39920000000006,
+      "success": true
+    },
+    {
+      "request": 35,
+      "ms": 407.13800000000003,
+      "success": true
+    },
+    {
+      "request": 36,
+      "ms": 396.5914,
+      "success": true
+    },
+    {
+      "request": 37,
+      "ms": 393.6467000000001,
+      "success": true
+    },
+    {
+      "request": 38,
+      "ms": 391.4174999999999,
+      "success": true
+    },
+    {
+      "request": 39,
+      "ms": 389.00080000000014,
+      "success": true
+    },
+    {
+      "request": 40,
+      "ms": 385.84000000000003,
+      "success": true
+    },
+    {
+      "request": 41,
+      "ms": 312.82190000000014,
+      "success": true
+    },
+    {
+      "request": 42,
+      "ms": 310.0058999999999,
+      "success": true
+    },
+    {
+      "request": 43,
+      "ms": 309.0068000000001,
+      "success": true
+    },
+    {
+      "request": 44,
+      "ms": 307.6191000000001,
+      "success": true
+    },
+    {
+      "request": 45,
+      "ms": 305.24929999999995,
+      "success": true
+    },
+    {
+      "request": 46,
+      "ms": 302.4975000000002,
+      "success": true
+    },
+    {
+      "request": 47,
+      "ms": 301.26930000000016,
+      "success": true
+    },
+    {
+      "request": 48,
+      "ms": 300.8291999999999,
+      "success": true
+    },
+    {
+      "request": 49,
+      "ms": 302.8933000000002,
+      "success": true
+    },
+    {
+      "request": 50,
+      "ms": 304.9100000000001,
+      "success": true
+    },
+    {
+      "request": 51,
+      "ms": 304.64480000000003,
+      "success": true
+    },
+    {
+      "request": 52,
+      "ms": 300.16100000000006,
+      "success": true
+    },
+    {
+      "request": 53,
+      "ms": 299.1903,
+      "success": true
+    },
+    {
+      "request": 54,
+      "ms": 299.26750000000015,
+      "success": true
+    },
+    {
+      "request": 55,
+      "ms": 300.6884,
+      "success": true
+    },
+    {
+      "request": 56,
+      "ms": 301.66460000000006,
+      "success": true
+    },
+    {
+      "request": 57,
+      "ms": 301.57349999999997,
+      "success": true
+    },
+    {
+      "request": 58,
+      "ms": 302.18730000000005,
+      "success": true
+    },
+    {
+      "request": 59,
+      "ms": 302.3031000000001,
+      "success": true
+    },
+    {
+      "request": 60,
+      "ms": 302.3892999999998,
+      "success": true
+    },
+    {
+      "request": 61,
+      "ms": 221.3672999999999,
+      "success": true
+    },
+    {
+      "request": 62,
+      "ms": 222.73929999999996,
+      "success": true
+    },
+    {
+      "request": 63,
+      "ms": 223.99710000000005,
+      "success": true
+    },
+    {
+      "request": 64,
+      "ms": 226.46949999999993,
+      "success": true
+    },
+    {
+      "request": 65,
+      "ms": 228.92079999999987,
+      "success": true
+    },
+    {
+      "request": 66,
+      "ms": 231.63010000000008,
+      "success": true
+    },
+    {
+      "request": 67,
+      "ms": 234.37959999999998,
+      "success": true
+    },
+    {
+      "request": 68,
+      "ms": 236.24250000000006,
+      "success": true
+    },
+    {
+      "request": 69,
+      "ms": 235.65329999999994,
+      "success": true
+    },
+    {
+      "request": 70,
+      "ms": 234.5978,
+      "success": true
+    },
+    {
+      "request": 71,
+      "ms": 233.5554000000002,
+      "success": true
+    },
+    {
+      "request": 72,
+      "ms": 232.61789999999996,
+      "success": true
+    },
+    {
+      "request": 73,
+      "ms": 232.6146000000001,
+      "success": true
+    },
+    {
+      "request": 74,
+      "ms": 233.02149999999983,
+      "success": true
+    },
+    {
+      "request": 75,
+      "ms": 231.87470000000008,
+      "success": true
+    },
+    {
+      "request": 76,
+      "ms": 230.74659999999994,
+      "success": true
+    },
+    {
+      "request": 77,
+      "ms": 230.0879,
+      "success": true
+    },
+    {
+      "request": 78,
+      "ms": 229.44460000000004,
+      "success": true
+    },
+    {
+      "request": 79,
+      "ms": 229.46040000000016,
+      "success": true
+    },
+    {
+      "request": 80,
+      "ms": 230.36839999999984,
+      "success": true
+    },
+    {
+      "request": 81,
+      "ms": 258.7041999999999,
+      "success": true
+    },
+    {
+      "request": 82,
+      "ms": 256.02970000000005,
+      "success": true
+    },
+    {
+      "request": 83,
+      "ms": 253.6337000000001,
+      "success": true
+    },
+    {
+      "request": 84,
+      "ms": 249.961,
+      "success": true
+    },
+    {
+      "request": 85,
+      "ms": 247.04579999999987,
+      "success": true
+    },
+    {
+      "request": 86,
+      "ms": 244.0217,
+      "success": true
+    },
+    {
+      "request": 87,
+      "ms": 241.41660000000002,
+      "success": true
+    },
+    {
+      "request": 88,
+      "ms": 239.40339999999992,
+      "success": true
+    },
+    {
+      "request": 89,
+      "ms": 237.5057999999999,
+      "success": true
+    },
+    {
+      "request": 90,
+      "ms": 234.71530000000007,
+      "success": true
+    },
+    {
+      "request": 91,
+      "ms": 233.04289999999992,
+      "success": true
+    },
+    {
+      "request": 92,
+      "ms": 231.90419999999995,
+      "success": true
+    },
+    {
+      "request": 93,
+      "ms": 231.32400000000007,
+      "success": true
+    },
+    {
+      "request": 94,
+      "ms": 230.40200000000004,
+      "success": true
+    },
+    {
+      "request": 95,
+      "ms": 229.66869999999994,
+      "success": true
+    },
+    {
+      "request": 96,
+      "ms": 229.09580000000005,
+      "success": true
+    },
+    {
+      "request": 97,
+      "ms": 229.48760000000016,
+      "success": true
+    },
+    {
+      "request": 98,
+      "ms": 229.30029999999988,
+      "success": true
+    },
+    {
+      "request": 99,
+      "ms": 229.8741,
+      "success": true
+    },
+    {
+      "request": 100,
+      "ms": 229.00340000000006,
+      "success": true
+    }
+  ]
+}
