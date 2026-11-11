@@ -159,6 +159,8 @@ export function createApplication({ system, publicDirectory = join(root, 'public
         result = system.openCheckin(actor, match[1]);
       } else if (method === 'POST' && path === '/api/checkin') {
         result = system.checkin(actor, body);
+      } else if (method === 'GET' && path === '/api/checkin-status') {
+        result = system.checkinStatus(actor);
       } else if (method === 'GET' && path === '/api/users') {
         result = system.listUsers(actor);
       } else if ((match = path.match(/^\/api\/users\/([^/]+)\/ban$/u)) && method === 'POST') {

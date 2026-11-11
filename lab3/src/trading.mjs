@@ -120,16 +120,27 @@ export const tradingMethods = {
       if (order.full_refund) {
         this.refundInternal(actorId, order, 0, 'reschedule_refund');
       } else {
-        const until = session.starts_at - this.now();
-        ensure(until >= 3 * DAY, 'REFUND_WINDOW_CLOSED', '不足三天或已开演，不可退票');
-        // Integer cents, round half up. Exactly 7 days belongs to the 40% tier.
-        const percent = until > 7 * DAY ? 20 : 40;
-        const fee = Math.floor((order.paid_cents * percent + 50) / 100);
-        this.refundInternal(actorId, order, fee, 'self_refund', 'cancelled');
+        const quote = this.refundQuote(order, session.starts_at);
+        ensure(quote.allowed, 'REFUND_WINDOW_CLOSED', quote.reason);
+        this.refundInternal(actorId, order, quote.feeCents, 'self_refund', 'cancelled');
       }
       this.promoteInternal(order.tier_id);
     });
     return this.orderView(orderId);
+  },
+
+  refundQuote(order, startsAt) {
+    if (order.state !== 'issued') {
+      return { allowed: false, feeCents: 0, refundCents: 0, reason: '仅已出票订单可退票' };
+    }
+    const until = startsAt - this.now();
+    if (!order.full_refund && until < 3 * DAY) {
+      return { allowed: false, feeCents: 0, refundCents: 0, reason: '不足三天或已开演，不可退票' };
+    }
+    const percent = order.full_refund ? 0 : until > 7 * DAY ? 20 : 40;
+    const fee = Math.floor((order.paid_cents * percent + 50) / 100);
+    return { allowed: true, percent, feeCents: fee, refundCents: order.paid_cents - fee,
+      reason: order.full_refund ? '活动变更，可全额退款' : `退票手续费 ${percent}%` };
   },
 
   leaveWaitlist(actorId, orderId) {

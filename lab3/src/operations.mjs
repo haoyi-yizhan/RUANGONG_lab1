@@ -2,6 +2,15 @@ import { randomUUID } from 'node:crypto';
 import { ensure, DomainError } from './errors.mjs';
 
 export const operationMethods = {
+  checkinStatus(actorId) {
+    this.actor(actorId, ['checker', 'admin']);
+    const counts = this.db.prepare(`SELECT COUNT(*) AS session_count,
+      COALESCE(SUM(s.checkin_open),0) AS open_count FROM sessions s
+      JOIN events e ON e.id=s.event_id WHERE e.status='published'
+      AND s.starts_at<=? AND s.ends_at>?`).get(this.now() + 10800000, this.now());
+    return { sessionCount: counts.session_count, openCount: counts.open_count };
+  },
+
   maintain() {
     return this.atomic(() => {
       const now = this.now();

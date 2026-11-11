@@ -1,6 +1,14 @@
 import { ensure, timestamp } from './errors.mjs';
 
 const iso = value => new Date(value).toISOString();
+const ORDER_COLUMNS = `o.*,e.title,s.starts_at,s.location,s.deadline,t.name AS tier_name,u.name AS viewer_name,
+  CASE WHEN o.state='waiting' THEN (
+    SELECT COUNT(*) FROM waitlist w JOIN orders queued ON queued.id=w.order_id
+    WHERE w.tier_id=o.tier_id AND queued.state='waiting'
+      AND w.sequence<=(SELECT sequence FROM waitlist WHERE order_id=o.id)
+  ) ELSE NULL END AS queue_position`;
+const ORDER_TABLES = `orders o JOIN tiers t ON t.id=o.tier_id JOIN sessions s ON s.id=o.session_id
+  JOIN events e ON e.id=s.event_id JOIN users u ON u.id=o.user_id`;
 
 export const queryMethods = {
   remaining(tierId) {
@@ -45,7 +53,7 @@ export const queryMethods = {
       clauses.push('e.id=?');
       values.push(filters.id);
     }
-    for (const [key, column] of [['keyword', 'e.title || e.theme'], ['speaker', 'e.speaker']]) {
+    for (const [key, column] of [['keyword', 'e.title || e.theme'], ['speaker', 'e.speaker'], ['theme', 'e.theme']]) {
       if (filters[key]) {
         clauses.push(`instr(lower(${column}),lower(?))>0`);
         values.push(String(filters[key]).slice(0, 200));
@@ -66,6 +74,13 @@ export const queryMethods = {
       values.push(timestamp(filters.to, '筛选结束时间'));
     }
     clauses.push(`EXISTS (SELECT 1 FROM sessions s WHERE ${sessionClauses.join(' AND ')})`);
+    if (filters.available === 'true') {
+      clauses.push(`EXISTS (SELECT 1 FROM tiers t JOIN sessions sale ON sale.id=t.session_id
+        WHERE sale.event_id=e.id AND sale.sale_at<=? AND sale.deadline>?
+        AND t.capacity>(SELECT COUNT(*) FROM orders o WHERE o.tier_id=t.id
+          AND o.state IN ('pending','issued','checked_in','redeemed','absent')))`);
+      values.push(this.now(), this.now());
+    }
     return this.db.prepare(`SELECT e.* FROM events e WHERE ${clauses.join(' AND ')}
       ORDER BY e.created_at DESC,e.id LIMIT 200`).all(...values).map(row => this.eventView(row));
   },
@@ -84,9 +99,7 @@ export const queryMethods = {
   },
 
   orderView(orderId) {
-    const row = this.db.prepare(`SELECT o.*,e.title,s.starts_at,t.name AS tier_name
-      FROM orders o JOIN tiers t ON t.id=o.tier_id JOIN sessions s ON s.id=o.session_id
-      JOIN events e ON e.id=s.event_id WHERE o.id=?`).get(orderId);
+    const row = this.db.prepare(`SELECT ${ORDER_COLUMNS} FROM ${ORDER_TABLES} WHERE o.id=?`).get(orderId);
     ensure(row, 'NOT_FOUND', '订单不存在', 404);
     return this.mapOrder(row);
   },
@@ -99,6 +112,9 @@ export const queryMethods = {
       seat: row.seat === null ? null : `${row.tier_name}-${String(row.seat).padStart(4, '0')}`,
       code: row.code, paymentDeadline: iso(row.payment_deadline), fullRefund: Boolean(row.full_refund),
       createdAt: iso(row.created_at),
+      location: row.location, viewerName: row.viewer_name,
+      registrationDeadline: iso(row.deadline), waitlistPosition: row.queue_position,
+      refundPreview: this.refundQuote(row, row.starts_at),
     };
   },
 
@@ -119,9 +135,8 @@ export const queryMethods = {
       values.push(filters.id);
     }
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
-    return this.db.prepare(`SELECT o.*,e.title,s.starts_at,t.name AS tier_name
-      FROM orders o JOIN tiers t ON t.id=o.tier_id JOIN sessions s ON s.id=o.session_id
-      JOIN events e ON e.id=s.event_id ${where} ORDER BY o.created_at DESC,o.rowid DESC LIMIT 500`)
+    return this.db.prepare(`SELECT ${ORDER_COLUMNS} FROM ${ORDER_TABLES}
+      ${where} ORDER BY o.created_at DESC,o.rowid DESC LIMIT 500`)
       .all(...values).map(row => this.mapOrder(row));
   },
 };

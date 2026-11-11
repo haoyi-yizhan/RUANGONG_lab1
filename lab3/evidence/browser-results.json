@@ -1,15 +1,33 @@
 {
   "browser": "Microsoft Edge headless",
   "passed": true,
-  "scenarios": [
-    "home rendering",
-    "form login",
-    "rules disclosure",
+  "screens": [
+    "login",
+    "verify",
+    "events",
+    "detail",
+    "payment",
+    "orders",
+    "organizer",
+    "admin",
+    "checkin",
+    "statistics"
+  ],
+  "interactiveChecks": [
+    "login",
+    "identity verification",
+    "event filtering",
+    "ticket selection",
     "create order",
-    "simulated payment",
-    "refund 80.00",
-    "mobile layout"
+    "payment countdown",
+    "payment and issuance",
+    "order filtering and 80 yuan refund",
+    "organizer application",
+    "admin approval and checkin window",
+    "checker ticket and identity verification",
+    "six statistics cards and export link",
+    "mobile layout without horizontal overflow"
   ],
   "runtimeErrors": [],
-  "completedAt": "2026-11-07T02:59:07.151Z"
+  "completedAt": "2026-11-11T03:18:33.594Z"
 }

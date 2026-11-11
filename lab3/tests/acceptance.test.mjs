@@ -352,3 +352,62 @@ test('purchased statistics count distinct attendees with issued tickets, excludi
   const second = x.system.createOrder(a.id, { tierId }); x.system.pay(a.id, second.id, { success: true });
   assert.equal(x.system.statistics(x.organizer.id, session.id).purchased, 1);
 });
+
+test('order presentation includes viewer and session data and live FIFO queue positions', t => {
+  const x = setup(t); const event = x.event(); const [a,b,c,d] = Array.from({ length: 4 }, () => x.user());
+  const tierId = event.sessions[0].tiers[0].id;
+  const first = x.system.createOrder(a.id, { tierId }); x.system.pay(a.id, first.id, { success: true });
+  const queued = [b,c,d].map(user => x.system.createOrder(user.id, { tierId, waitlist: true }));
+  assert.deepEqual(queued.map(o => o.waitlistPosition), [1,2,3]);
+  const view = findOrder(x.system, c.id, queued[1].id);
+  assert.equal(view.viewerName, x.system.db.prepare('SELECT name FROM users WHERE id=?').get(c.id).name);
+  assert.equal(view.location, 'Hall'); assert.equal(view.registrationDeadline, event.sessions[0].deadline);
+  assert.equal(view.waitlistPosition, 2); assert.equal(view.refundPreview.allowed, false);
+  assert.deepEqual(x.system.orderView(queued[1].id), view);
+  x.system.leaveWaitlist(b.id, queued[0].id);
+  assert.equal(findOrder(x.system, c.id, queued[1].id).waitlistPosition, 1);
+  assert.equal(findOrder(x.system, d.id, queued[2].id).waitlistPosition, 2);
+  x.system.refund(a.id, first.id);
+  assert.equal(findOrder(x.system, c.id, queued[1].id).state, 'issued');
+  assert.equal(findOrder(x.system, c.id, queued[1].id).waitlistPosition, null);
+  assert.equal(findOrder(x.system, d.id, queued[2].id).waitlistPosition, 1);
+});
+
+for (const [days, expected] of [[8,8000],[7,6000],[3,6000],[3 - 1 / DAY,null]]) {
+  test(`refund preview matches actual refund at ${days} days`, t => {
+    const x = setup(t); const event = x.event(); const buyer = x.user();
+    const pending = x.system.createOrder(buyer.id, { tierId: event.sessions[0].tiers[0].id });
+    x.system.pay(buyer.id, pending.id, { success: true });
+    x.now += (10 - days) * DAY;
+    const preview = findOrder(x.system, buyer.id, pending.id).refundPreview;
+    if (expected === null) { assert.equal(preview.allowed, false); assert.throws(() => x.system.refund(buyer.id, pending.id)); }
+    else { assert.equal(preview.allowed, true); assert.equal(preview.refundCents, expected); assert.equal(preview.feeCents, 10000 - expected); assert.equal(x.system.refund(buyer.id, pending.id).refundCents, preview.refundCents); }
+  });
+}
+
+test('theme and available filters respect matching theme, sale window, deadline and inventory', t => {
+  const x = setup(t); const event = x.event(); const buyer = x.user(); const session = event.sessions[0];
+  const includes = filters => x.system.listEvents(null, filters).some(row => row.id === event.id);
+  assert.equal(includes({ theme: 'usi', available: 'true' }), true);
+  assert.equal(includes({ theme: 'theatre', available: 'true' }), false);
+  const pending = x.system.createOrder(buyer.id, { tierId: session.tiers[0].id });
+  assert.equal(includes({ available: 'true' }), false);
+  x.system.pay(buyer.id, pending.id, { success: true }); x.system.refund(buyer.id, pending.id);
+  assert.equal(includes({ available: 'true' }), true);
+  x.now = Date.parse(session.saleAt) - 1;
+  assert.equal(includes({ available: 'true' }), false);
+  x.now = Date.parse(session.deadline);
+  assert.equal(includes({ available: 'true' }), false);
+});
+
+test('checkin status is restricted to staff and contains aggregate window counts only', t => {
+  const x = setup(t); const event = x.event(); const checker = x.user('checker'); const buyer = x.user();
+  assert.throws(() => x.system.checkinStatus(buyer.id));
+  assert.throws(() => x.system.checkinStatus(x.organizer.id));
+  assert.deepEqual(x.system.checkinStatus(checker.id), { sessionCount: 0, openCount: 0 });
+  x.now = Date.parse(event.sessions[0].startsAt) - 3 * 3600000;
+  assert.deepEqual(x.system.checkinStatus(checker.id), { sessionCount: 1, openCount: 0 });
+  x.system.openCheckin(x.admin.id, event.sessions[0].id);
+  assert.deepEqual(x.system.checkinStatus(checker.id), { sessionCount: 1, openCount: 1 });
+  assert.deepEqual(x.system.checkinStatus(x.admin.id), { sessionCount: 1, openCount: 1 });
+});

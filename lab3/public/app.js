@@ -42,26 +42,41 @@ function selectField(label, name, choices, selected) {
   choices.forEach(([value, text]) => select.append(el('option', { value, selected: value === selected }, text)));
   return el('label', {}, label, select);
 }
-function formData(form) { return Object.fromEntries(new FormData(form).entries()); }
-function money(cents) { return `¥${(Number(cents || 0) / 100).toFixed(2)}`; }
-function time(value) { return value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '待定'; }
-function iso(value) { if (!value) throw new Error('请填写完整的日期和时间'); const date = new Date(value); if (Number.isNaN(date.getTime())) throw new Error('日期或时间格式有误，请检查后重试'); return date.toISOString(); }
-function orderLabel(value) { const names = { pending: '待支付', issued: '已出票', checked_in: '已签到', redeemed: '已核销', absent: '已缺席', cancelled: '已取消', closed: '已关闭', refunded: '已退款', waiting: '候补中' }; return names[value] || value || '未知'; }
+function formData(form) { return Object.fromEntries(new FormData(form).entries());
+  }
+function money(cents) { return `¥${(Number(cents || 0) / 100).toFixed(2)}`;
+  }
+function time(value) { return value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '待定';
+  }
+function iso(value) { if (!value) throw new Error('请填写完整的日期和时间');
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) throw new Error('日期或时间格式有误，请检查后重试');
+  return date.toISOString();
+  }
+function orderLabel(value) { const names = { pending: '待支付',
+    issued: '已出票', checked_in: '已签到', redeemed: '已核销', absent: '已缺席',
+    cancelled: '已取消', closed: '已关闭', refunded: '已退款', waiting: '候补中' };
+  return names[value] || value || '未知';
+  }
 function localTime(value) {
   if (!value) return '';
   const date = new Date(value);
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }
-function label(value) { return labels[value] || value || '未知'; }
-function tag(text, style = '') { return el('span', { class: `tag ${style}` }, text); }
-function panel(...children) { return el('div', { class: 'panel' }, ...children); }
+function label(value) { return labels[value] || value || '未知';
+  }
+function tag(text, style = '') { return el('span', { class: `tag ${style}` }, text);
+  }
+function panel(...children) { return el('div', { class: 'panel' }, ...children);
+  }
 function heading(title, description) {
   return el('div', { class: 'section-head' },
     el('div', {},
     el('h2', {}, title), description && el('p', {}, description)));
 }
 function empty(title, description) { return el('div', { class: 'empty' },
-    el('strong', {}, title), description); }
+    el('strong', {}, title), description);
+  }
 function showNotice(message, error = false) {
   notice.replaceChildren(el('div', { class: `notice ${error ? 'error' : ''}` }, message));
   setTimeout(() => notice.replaceChildren(), 7000);
@@ -74,13 +89,18 @@ async function api(path, options = {}) {
     body: options.body === undefined ? undefined : JSON.stringify(options.body)
   });
   let result;
-  try { result = await response.json(); } catch { throw new Error('服务器响应无法读取'); }
+  try { result = await response.json();
+    } catch { throw new Error('服务器响应无法读取');
+    }
   if (!response.ok || result.error) throw new Error(result.error?.message || '请求失败，请稍后重试');
   return result.data;
 }
 async function run(action, success) {
-  try { await action(); if (success) showNotice(success); }
-  catch (error) { showNotice(error.message, true); }
+  try { await action();
+    if (success) showNotice(success);
+    }
+  catch (error) { showNotice(error.message, true);
+    }
 }
 function modal(title, ...children) {
   const close = el('button', { class: 'close', type: 'button', 'aria-label': '关闭', onclick: () => dialog.close() }, '×');
@@ -93,188 +113,16 @@ function submitForm(form, action) {
   form.addEventListener('submit', event => { event.preventDefault(); run(() => action(form)); });
   return form;
 }
-function loginRequired() {
-  if (state.user) return true;
-  authDialog('login');
-  return false;
-}
-function setPage(page) { state.refresh = null; state.page = page; render(); }
-function nav() {
-  const items = state.user?.role === 'checker' ? [] : [['events', '◈', '发现活动'], ...(state.user?.role === 'organizer' ? [] : [['orders', '▤', '我的订单']]), ['messages', '✉', '站内消息']];
-  if (state.user?.role === 'organizer') items.push(['organizer', '▧', '活动管理']);
-  if (state.user?.role === 'admin') items.push(['reviews', '✓', '审核管理'], ['users', '♙', '用户管理'], ['audit', '≡', '审计记录']);
-  if (['admin', 'checker'].includes(state.user?.role)) items.push(['checkin', '⌗', '现场检票']);
-  navigation.replaceChildren(...items.map(([id, icon, text]) => el('button', {
-    class: `nav-item ${state.page === id ? 'active' : ''}`, onclick: () => setPage(id)
-  },
-    el('span', { class: 'nav-icon' }, icon), text)));
-  document.querySelector('#page-title').textContent = items.find(item => item[0] === state.page)?.[2] || '发现活动';
-  document.querySelector('#user-badge').textContent = state.user ? `${state.user.name || state.user.phone} · ${roles[state.user.role] || state.user.role}` : '访客';
-  document.querySelector('#account-button').textContent = state.user ? '账户' : '登录 / 注册';
-}
-function authDialog(mode = 'login') {
-  const form = el('form', { class: 'stack' });
-  const choices = mode === 'register' ? [['participant', '参与者'], ['organizer', '组织者']] : [];
-  form.append(field('手机号', 'phone', 'tel', { required: true, placeholder: '请输入手机号' }));
-  if (mode === 'reset') form.append(field('恢复码', 'recoveryCode', 'text', { required: true }));
-  form.append(field(mode === 'reset' ? '新密码' : '密码', 'password', 'password', { required: true }));
-  if (choices.length) form.append(selectField('注册身份', 'role', choices, 'participant'));
-  form.append(el('button', { class: 'button', type: 'submit' }, mode === 'login' ? '登录' : mode === 'register' ? '创建账户' : '重置密码'));
-  const switches = el('div', { class: 'actions' });
-  if (mode !== 'login') switches.append(button('已有账户，去登录', () => authDialog('login'), 'secondary small'));
-  if (mode !== 'register') switches.append(button('注册账户', () => authDialog('register'), 'secondary small'));
-  if (mode !== 'reset') switches.append(button('忘记密码', () => authDialog('reset'), 'secondary small'));
-  form.append(switches);
-  submitForm(form, async f => {
-    const credentials = formData(f);
-    const result = await api(mode === 'login' ? '/api/login' : mode === 'register' ? '/api/register' : '/api/reset-password', { method: 'POST', body: credentials });
-    if (mode === 'register') {
-      try { const loggedIn = await api('/api/login', { method: 'POST', body: { phone: credentials.phone, password: credentials.password } }); state.user = loggedIn.user || loggedIn; } catch (error) { state.user = null; showNotice('注册成功，自动登录失败，请手动登录：' + error.message, true); }
-      modal('注册成功',
-    el('div', { class: 'stack' },
-    el('p', {}, '请妥善保存以下恢复码，忘记密码时需要使用。'),
-    el('strong', {}, result.recoveryCode),
-    button('我已保存', () => { dialog.close(); render(); })));
-    } else if (mode === 'reset') { state.user = null; modal('密码已重置', el('div', { class: 'stack' }, el('p', {}, '请保存新的恢复码，原恢复码已失效。'), el('strong', {}, result.recoveryCode), button('我已保存，去登录', () => authDialog('login')))); }
-    else { state.user = result.user || result; if (state.user?.role === 'checker') state.page = 'checkin'; dialog.close(); await render(); showNotice('登录成功'); }
-  });
-  modal(mode === 'login' ? '欢迎回来' : mode === 'register' ? '加入聚场' : '找回密码', form);
-}
-function accountDialog() {
-  if (!state.user) return authDialog();
-  const actions = el('div', { class: 'stack' },
-    el('p', { class: 'muted' }, `${state.user.phone} · ${roles[state.user.role] || state.user.role}`),
-    el('p', {}, `实名信息：${state.user.name || '尚未认证'}`),
-    button('实名认证', verifyDialog, 'secondary'),
-    button('退出登录', () => run(async () => { await api('/api/logout', { method: 'POST', body: {} }); state.user = null; state.page = 'events'; dialog.close(); await render(); }, '已退出登录'), 'danger')
-  );
-  modal('我的账户', actions);
-}
-function verifyDialog() {
-  const form = el('form', { class: 'stack' },
-    field('真实姓名', 'name', 'text', { required: true }),
-    field('身份证号', 'idNumber', 'text', { required: true }),
-    el('button', { class: 'button' }, '提交认证'));
-  submitForm(form, async f => { await api('/api/verify', { method: 'POST', body: formData(f) }); state.user = await api('/api/me'); dialog.close(); await render(); showNotice('实名认证成功'); });
-  modal('实名认证', form);
-}
-function eventCard(event) {
-  const first = event.sessions?.[0];
-  const prices = (event.sessions || []).flatMap(s => (s.tiers || []).map(t => Number(t.priceCents)));
-  const card = el('article', { class: 'card' },
-    el('div', { class: 'card-cover' }, event.kind === 'lecture' ? 'IDEAS & INSPIRATION / 讲座' : 'LIVE & MOMENT / 演出'),
-    el('div', { class: 'card-body' }, tag(label(event.kind)),
-    el('h3', {}, event.title),
-      el('p', {}, `◷  ${time(first?.startsAt)}`),
-    el('p', {}, `⌖  ${first?.location || '地点待定'}`),
-      el('p', {}, `${event.speaker ? `主讲 / 嘉宾：${event.speaker}` : event.theme || '精彩活动等你参与'}`),
-      el('div', { class: 'actions' },
-    el('strong', {}, prices.length ? `${money(Math.min(...prices))} 起` : '票价待定'),
-    button('查看详情', () => eventDetail(event.id), 'secondary small'))));
-  return card;
-}
-async function eventsPage() {
-  const hero = el('div', { class: 'hero' },
-    el('span', { class: 'eyebrow' }, 'MAKE EVERY MOMENT COUNT'),
-    el('h2', {}, '好时光，值得亲临现场'),
-    el('p', {}, '发现感兴趣的演出与讲座，在这里找到下一个值得期待的相聚。'));
-  const form = el('form', { class: 'filters' },
-    field('关键词', 'keyword', 'search', { placeholder: '活动名称或主题' }),
-    field('地点', 'location', 'text', { placeholder: '输入地点' }),
-    field('主讲 / 嘉宾', 'speaker', 'text', { placeholder: '输入姓名' }),
-    field('开始日期', 'from', 'date'),
-    field('结束日期', 'to', 'date'),
-    state.user?.role === 'admin' && field('活动 ID', 'eventId', 'search', { placeholder: '输入活动 ID' }),
-    el('button', { class: 'button', type: 'submit' }, '搜索活动'));
-  const results = el('div');
-  const load = async () => {
-    const values = formData(form);
-    if (values.from && values.to && values.from > values.to) throw new Error('开始日期不能晚于结束日期');
-    const params = new URLSearchParams(Object.entries(values).filter(([key, value]) => key !== 'eventId' && value));
-    if (values.from) params.set('from', iso(`${values.from}T00:00:00`));
-    if (values.to) params.set('to', iso(`${values.to}T23:59:59.999`));
-    if (values.eventId?.trim()) params.set('id', values.eventId.trim());
-    state.events = await api(`/api/events?${params}`);
-    results.replaceChildren(state.events.length ? el('div', { class: 'grid' }, state.events.map(eventCard)) : empty('暂无符合条件的活动', '试试调整筛选条件，发现更多精彩。'));
-  };
-  submitForm(form, load);
-  state.refresh = load;
-  content.replaceChildren(hero, heading('探索活动', '选择一场活动，让日程多一份期待。'), panel(form), results);
-  await load();
-}
-async function eventDetail(id) {
-  await run(async () => {
-    const event = await api(`/api/events/${encodeURIComponent(id)}`);
-    const body = el('div', { class: 'stack' },
-    el('div', { class: 'row' }, tag(label(event.kind)), tag(label(event.status), 'green')),
-    el('p', { class: 'muted' }, event.theme || '暂无活动介绍'), event.speaker && el('p', {}, `主讲 / 嘉宾：${event.speaker}`));
-    body.append(el('p', { class: 'muted' }, '活动 ID：' + event.id));
-    if (event.rules) body.append(el('p', {}, '报名与退款规则：' + event.rules));
-    for (const session of event.sessions || []) {
-      const box = el('div', { class: 'session-editor' },
-    el('strong', {}, `${time(session.startsAt)} — ${time(session.endsAt)}`),
-    el('p', { class: 'muted' }, `场次 ID：${session.id} · 地点：${session.location} · 开售：${time(session.saleAt)} · 截止：${time(session.deadline)}`));
-      for (const tier of session.tiers || []) {
-        const actions = el('div', { class: 'actions' },
-    button('立即报名', () => orderTier(tier.id, false), 'small'),
-    button('加入候补', () => orderTier(tier.id, true), 'secondary small'));
-        box.append(el('div', { class: 'list-row' },
-    el('div', {},
-    el('strong', {}, `${tier.name} · ${money(tier.priceCents)}`),
-    el('p', { class: 'muted' }, `剩余 ${tier.remaining} / ${tier.capacity}`)), actions));
-      }
-      body.append(box);
-    }
-    modal(event.title, body);
-  });
-}
-function orderTier(tierId, waitlist) {
-  if (!loginRequired()) return;
-  run(async () => { await api('/api/orders', { method: 'POST', body: { tierId, waitlist } }); dialog.close(); setPage('orders'); }, waitlist ? '已提交候补申请' : '订单已创建，请及时支付');
-}
-async function ordersPage() {
-  if (!loginRequired()) { content.replaceChildren(empty('登录后查看订单', '登录账户后可查看报名和候补记录。')); return; }
-  const filters = el('form', { class: 'filters' }, field('订单 ID', 'orderId', 'search'), field('用户 ID', 'userId', 'search'), el('button', { class: 'button' }, '查询'));
-  const results = el('div');
-  const load = async () => {
-  const values = formData(filters);
-  const params = new URLSearchParams();
-  if (state.user.role === 'admin' && values.orderId.trim()) params.set('id', values.orderId.trim());
-  if (state.user.role === 'admin' && values.userId.trim()) params.set('userId', values.userId.trim());
-  state.orders = await api('/api/orders?' + params.toString());
-  const visibleOrders = state.orders.filter(order => (!values.orderId || String(order.id).includes(values.orderId.trim())) && (!values.userId || String(order.userId).includes(values.userId.trim())));
-  const list = el('div', { class: 'panel' });
-  for (const order of visibleOrders) {
-    const info = el('div', {},
-    el('div', { class: 'row' },
-    el('strong', {}, order.eventTitle), tag(orderLabel(order.state), 'green')),
-    el('p', { class: 'muted' }, `${time(order.startsAt)} · ${order.tierName} · ${money(order.priceCents)}`));
-    if (state.user.role === 'admin') info.append(el('p', { class: 'muted' }, `订单 ID：${order.id} · 用户 ID：${order.userId}`));
-    if (order.seat) info.append(el('p', { class: 'muted' }, `座位：${order.seat}`));
-    if (order.code) info.append(el('p', {}, `入场码：${order.code}`));
-    if (order.paymentDeadline) info.append(el('p', { class: 'muted' }, `支付截止：${time(order.paymentDeadline)}`));
-    if (order.refundCents != null) info.append(el('p', { class: 'muted' }, `退款金额：${money(order.refundCents)}`));
-    const actions = el('div', { class: 'actions' });
-    if (order.state === 'pending' && state.user.role !== 'admin') {
-      actions.append(button('模拟支付', () => orderAction(order.id, 'pay', { success: true }), 'small'));
-      actions.append(button('模拟支付失败', () => orderAction(order.id, 'pay', { success: false }), 'secondary small'));
-    }
-    if (order.state === 'issued' && state.user.role !== 'admin') actions.append(button('申请退款', () => orderAction(order.id, 'refund', {}), 'secondary small'));
-    if (order.state === 'waiting' && state.user.role !== 'admin') actions.append(button('退出候补', () => orderAction(order.id, 'leave', {}), 'secondary small'));
-    list.append(el('div', { class: 'list-row' }, info, actions));
-  }
-  results.replaceChildren(visibleOrders.length ? list : empty('没有匹配的订单', '订单记录会显示在这里。'));
-  };
-  submitForm(filters, load);
-  state.refresh = load;
-  content.replaceChildren(heading(state.user.role === 'admin' ? '订单管理' : '我的订单', '管理报名、支付与候补。'), state.user.role === 'admin' ? panel(filters) : null, results);
-  await load();
-}
-function orderAction(id, action, body) {
-  run(async () => { await api(`/api/orders/${encodeURIComponent(id)}/${action}`, { method: 'POST', body }); await render(); }, action === 'pay' && !body.success ? '已模拟支付失败' : '操作已提交');
-}
+
+
+
+
+
+
 async function messagesPage() {
-  if (!loginRequired()) { content.replaceChildren(empty('登录后查看消息', '活动和订单通知会显示在这里。')); return; }
+  if (!loginRequired()) { content.replaceChildren(empty('登录后查看消息', '活动和订单通知会显示在这里。'));
+    return;
+    }
   const messages = await api('/api/messages');
   const list = el('div', { class: 'panel' });
   messages.forEach(message => list.append(el('div', { class: 'list-row' },
@@ -309,27 +157,9 @@ function sessionEditor(session = {}) {
     button('移除此场次', () => box.remove(), 'danger small')));
   return box;
 }
-function editorValue(box, name) { return box.querySelector(`[name="${name}"]`).value; }
-function eventEditor(event = {}) {
-  const sessions = el('div', { class: 'stack' });
-  (event.sessions?.length ? event.sessions : [{}]).forEach(session => sessions.append(sessionEditor(session)));
-  const form = el('form', { class: 'stack' },
-    el('div', { class: 'form-grid' },
-    field('活动名称', 'title', 'text', { required: true, value: event.title || '' }), selectField('活动类型', 'kind', [['performance', '演出'], ['lecture', '讲座']], event.kind || 'performance'),
-    field('主讲 / 嘉宾', 'speaker', 'text', { value: event.speaker || '' }),
-    field('主题', 'theme', 'text', { value: event.theme || '' }),
-    field('计划发布时间', 'publishAt', 'datetime-local', { required: true, value: localTime(event.publishAt) })), sessions,
-    button('添加场次', () => sessions.append(sessionEditor()), 'secondary'),
-    el('button', { class: 'button', type: 'submit' }, '提交审核'));
-  submitForm(form, async f => {
-    const values = formData(f);
-    const list = [...sessions.children].map(box => ({ startsAt: iso(editorValue(box, 'startsAt')), endsAt: iso(editorValue(box, 'endsAt')), location: editorValue(box, 'location'), saleAt: iso(editorValue(box, 'saleAt')), deadline: iso(editorValue(box, 'deadline')), tiers: [...box.querySelectorAll('.tier-editor')].map(tier => ({ name: editorValue(tier, 'tierName'), priceCents: Math.round(Number(editorValue(tier, 'tierPrice')) * 100), capacity: Number(editorValue(tier, 'tierCapacity')) })) }));
-    if (!list.length || list.some(session => !session.tiers.length)) throw new Error('请至少添加一个场次，并为每个场次添加票档');
-    await api(event.id ? `/api/events/${encodeURIComponent(event.id)}/resubmit` : '/api/events', { method: 'POST', body: { title: values.title, kind: values.kind, speaker: values.speaker, theme: values.theme, publishAt: iso(values.publishAt), sessions: list } });
-    dialog.close(); await render(); showNotice('活动申请已提交');
-  });
-  modal(event.id ? '修改并重新提交' : '创建活动申请', form);
-}
+function editorValue(box, name) { return box.querySelector(`[name="${name}"]`).value;
+  }
+
 function changeDialog(event) {
   const boxes = (event.sessions || []).map(session => el('div', { class: 'session-editor', 'data-id': session.id },
     el('div', { class: 'form-grid' },
@@ -339,70 +169,17 @@ function changeDialog(event) {
   const form = el('form', { class: 'stack' }, selectField('申请类型', 'kind', [['reschedule', '变更时间或地点'], ['cancel', '取消活动']], 'reschedule'),
     field('申请原因', 'reason', 'textarea', { required: true }), ...boxes,
     el('button', { class: 'button' }, '提交变更申请'));
-  submitForm(form, async f => { const values = formData(f); await api(`/api/events/${encodeURIComponent(event.id)}/changes`, { method: 'POST', body: { kind: values.kind, reason: values.reason, sessions: boxes.map(box => ({ id: box.dataset.id, startsAt: iso(editorValue(box, 'startsAt')), endsAt: iso(editorValue(box, 'endsAt')), location: editorValue(box, 'location') })) } }); dialog.close(); await render(); showNotice('变更申请已提交'); });
+  submitForm(form, async f => { const values = formData(f);
+      await api(`/api/events/${encodeURIComponent(event.id)}/changes`,
+        { method: 'POST', body: { kind: values.kind, reason: values.reason,
+        sessions: boxes.map(box => ({ id: box.dataset.id, startsAt: iso(editorValue(box,
+        'startsAt')), endsAt: iso(editorValue(box, 'endsAt')), location: editorValue(box,
+        'location') })) } }); dialog.close(); await render(); showNotice('变更申请已提交');
+      });
   modal('申请活动变更', form);
 }
-async function statistics(session, eventId) {
-  await run(async () => {
-    const data = await api(`/api/sessions/${encodeURIComponent(session.id)}/statistics`);
-    const attendance = data.attendanceRate == null ? '不适用' : `${(Number(data.attendanceRate) * 100).toFixed(1)}%`;
-    const fields = [['已发放', data.issued], ['已购买', data.purchased], ['已到场', data.attended], ['候补中', data.waiting], ['已退款', data.refunded], ['到场率', attendance]];
-    const link = el('a', { class: 'button secondary', href: `/api/events/${encodeURIComponent(eventId)}/export?sessionId=${encodeURIComponent(session.id)}`, download: '' }, '下载 CSV');
-    modal('场次统计',
-    el('div', { class: 'stack' },
-    el('p', { class: 'muted' }, `${time(session.startsAt)} · ${session.location}`),
-    el('div', { class: 'metrics' }, fields.map(([name, value]) => el('div', { class: 'metric' }, name,
-    el('strong', {}, value)))), link));
-  });
-}
-async function organizerPage() {
-  const events = await api('/api/events');
-  const own = events.filter(event => String(event.organizerId) === String(state.user.id));
-  const reviews = await api('/api/reviews');
-  const list = el('div', { class: 'stack' });
-  for (const event of own) {
-    const actions = el('div', { class: 'actions' },
-    button('查看详情', () => eventDetail(event.id), 'secondary small'),
-    button('申请变更', () => changeDialog(event), 'secondary small'));
-    if (['rejected', 'draft'].includes(event.status)) actions.append(button('修改并重新提交', () => eventEditor(event), 'small'));
-    const body = el('div', { class: 'stack' },
-    el('div', { class: 'row' },
-    el('h3', {}, event.title), tag(label(event.status), event.status === 'rejected' ? 'red' : 'green')),
-    el('p', { class: 'muted' }, `计划发布：${time(event.publishAt)}${event.rejection ? ` · 驳回原因：${event.rejection}` : ''}`), actions);
-    for (const session of event.sessions || []) body.append(el('div', { class: 'list-row' },
-    el('div', {},
-    el('strong', {}, time(session.startsAt)),
-    el('p', { class: 'muted' }, session.location)),
-    button('查看统计 / 导出', () => statistics(session, event.id), 'secondary small')));
-    list.append(panel(body));
-  }
-  content.replaceChildren(el('div', { class: 'section-head' },
-    el('div', {},
-    el('h2', {}, '活动管理'),
-    el('p', {}, '创建活动、跟踪审核并查看场次数据。')),
-    button('＋ 创建活动', () => eventEditor())), own.length ? list : empty('还没有活动', '创建活动并提交审核后，在这里跟踪进度。'), heading('审核进度', '查看发布与变更申请的审核历史。'), reviews.length ? panel(...reviews.map(review => el('div', { class: 'list-row' }, el('div', {}, el('strong', {}, review.eventTitle), el('p', { class: 'muted' }, label(review.kind) + ' · ' + label(review.status) + (review.reason ? ' · ' + review.reason : '')))))) : empty('暂无审核记录', ''));
-}
-async function reviewsPage() {
-  const reviews = await api('/api/reviews');
-  const list = el('div', { class: 'panel' });
-  reviews.forEach(review => {
-    const actions = el('div', { class: 'actions' });
-    if (review.status === 'pending') actions.append(button('通过', () => reviewAction(review, true), 'small'), button('驳回', () => reviewAction(review, false), 'danger small'));
-    list.append(el('div', { class: 'list-row' },
-    el('div', {},
-    el('div', { class: 'row' },
-    el('strong', {}, review.eventTitle), tag(label(review.kind)), tag(label(review.status))),
-    el('p', { class: 'muted' }, review.reason || '暂无申请说明'), review.payload && el('p', { class: 'muted' }, typeof review.payload === 'string' ? review.payload : JSON.stringify(review.payload))), actions));
-  });
-  content.replaceChildren(heading('审核管理', '审核活动发布、变更及取消申请。'), reviews.length ? list : empty('暂无待审核申请', '新的申请会出现在这里。'));
-}
-function reviewAction(review, approved) {
-  const form = el('form', { class: 'stack' },
-    field(approved ? '审核意见（可选）' : '驳回原因', 'reason', 'textarea', { required: !approved }),
-    el('button', { class: 'button' }, approved ? '确认通过' : '确认驳回'));
-  submitForm(form, async f => { await api(`/api/reviews/${encodeURIComponent(review.id)}`, { method: 'POST', body: { approved, reason: formData(f).reason } }); dialog.close(); await render(); showNotice('审核结果已提交'); });
-  modal(`${approved ? '通过' : '驳回'} · ${review.eventTitle}`, form);
-}
+
+
 async function usersPage() {
   const users = await api('/api/users');
   const list = el('div', { class: 'panel' });
@@ -418,7 +195,9 @@ function banDialog(user) {
   const form = el('form', { class: 'stack' },
     field('操作原因', 'reason', 'textarea', { required: true }),
     el('button', { class: 'button' }, '确认提交'));
-  submitForm(form, async f => { await api(`/api/users/${encodeURIComponent(user.id)}/ban`, { method: 'POST', body: { banned: !user.banned, reason: formData(f).reason } }); dialog.close(); await render(); showNotice('账户状态已更新'); });
+  submitForm(form, async f => { await api(`/api/users/${encodeURIComponent(user.id)}/ban`,
+        { method: 'POST', body: { banned: !user.banned, reason: formData(f).reason } });
+      dialog.close(); await render(); showNotice('账户状态已更新'); });
   modal(`${user.banned ? '解除封禁' : '封禁账户'} · ${user.phone}`, form);
 }
 async function auditPage() {
@@ -441,47 +220,498 @@ async function auditPage() {
   content.replaceChildren(heading('审计记录', '按对象查询系统操作记录。'), panel(form), results);
   await load();
 }
-async function checkinPage() {
-  if (state.user.role === 'checker') {
-    const form = el('form', { class: 'stack' },
-      field('入场码', 'code', 'text', { required: true, placeholder: '输入观众入场码' }),
-      field('身份证号', 'idNumber', 'text', { required: true, placeholder: '输入观众身份证号' }),
-      el('button', { class: 'button' }, '确认检票'));
-    submitForm(form, async f => {
-      await api('/api/checkin', { method: 'POST', body: formData(f) });
-      f.reset();
-      showNotice('检票成功');
+
+state.page = 'auth';
+state.detailId = null;
+state.paymentOrder = null;
+state.authMode = 'login';
+state.checkins = [];
+state.statisticsSession = null;
+
+function nav() {
+  let items = [];
+  if (state.user?.role === 'participant') items = [['events','演出'],['orders','我的订单'],['messages','站内消息']];
+  if (state.user?.role === 'organizer') items = [['organizer','演出管理'],['statistics','数据统计'],['messages','站内消息'],['events','演出']];
+  if (state.user?.role === 'admin') items = [['reviews','演出审核'],
+    ['checkin','签到窗口'],['events','演出'],['orders','订单查询'],['audit',
+      '审计记录'],['messages','站内消息']];
+  if (state.user?.role === 'checker') items = [['checkin','核销']];
+  navigation.replaceChildren(...items.map(([id, title]) => el('button',
+        { class: `nav-item ${state.page === id ? 'active' : ''}`,
+        'data-page': id, onclick: () => setPage(id) }, title)));
+  document.querySelector('#user-badge').textContent = state.user ? (state.user.name || roles[state.user.role] || '用户').slice(0, 1) : '客';
+  document.querySelector('#account-button').textContent = state.user ? '账号设置' : '登录 / 注册';
+}
+function setPage(page) { state.refresh = null;
+  state.page = page;
+  render();
+  window.scrollTo(0, 0);
+  }
+function signedInPage() {
+  if (!state.user) return 'auth';
+  if (!state.user.name && ['participant','organizer'].includes(state.user.role)) return 'verify';
+  return ({ participant:'events', organizer:'organizer', admin:'reviews', checker:'checkin' })[state.user.role] || 'events';
+}
+function recoveryModal(title, code, next) {
+  modal(title, el('div', { class:'stack' }, el('p', {}, '请妥善保存恢复码，忘记密码时需要使用。'),
+      el('strong', {}, code), button('我已保存', () => { dialog.close();
+        next(); })));
+}
+function authPage() {
+  const mode = state.authMode;
+  const tabs = el('div', { class:'tabs' }, button('登录', () => { state.authMode='login';
+        render(); }, mode === 'login' ? '' : 'secondary'), button('注册',
+      () => { state.authMode='register'; render(); }, mode === 'register' ? '' : 'secondary'));
+  const form = el('form', { class:'stack' }, field('手机号（登录账号）','phone','tel',{required:true,placeholder:'请输入 11 位手机号'}));
+  if (mode === 'reset') form.append(field('恢复码','recoveryCode','text',{required:true}));
+  form.append(field(mode === 'reset' ? '新密码' : '密码','password','password',{required:true,placeholder:'请输入密码'}));
+  if (mode === 'register') form.append(selectField('注册身份','role',[['participant','参与者'],['organizer','组织者']],'participant'));
+  form.append(el('button',{class:'button full',type:'submit'},mode === 'register' ? '注册' : mode === 'reset' ? '重置密码' : '登录'));
+  form.append(button(mode === 'reset' ? '返回登录' : '忘记密码？自助重置',
+      () => { state.authMode = mode === 'reset' ? 'login' : 'reset';
+        render(); }, 'secondary'));
+  submitForm(form, async f => {
+    const values = formData(f);
+    const result = await api(mode === 'login' ? '/api/login' : mode === 'register' ? '/api/register' : '/api/reset-password',
+      {method:'POST',body:values});
+    if (mode === 'reset') { state.user=null; return recoveryModal('密码重置成功',result.recoveryCode,() => { state.authMode='login'; render(); }); }
+    if (mode === 'register') {
+      try { const logged = await api('/api/login',{method:'POST',
+            body:{phone:values.phone,password:values.password}}); state.user=logged.user || logged;
+        }
+      catch (error) { state.user=null; showNotice('注册成功，请保存恢复码后手动登录：'+error.message,true); }
+      return recoveryModal('注册成功',result.recoveryCode,() => setPage(signedInPage()));
+    }
+    state.user=result.user || result;
+    notice.replaceChildren();
+    setPage(signedInPage());
+  });
+  const roleCards = [['参与者','查询购票退票候补，凭票码入场'],['组织者','提交演出申请，查看审核进度与统计'],['检票人员','签到窗口开启后核销票码'],['平台管理员','审核演出、开启窗口、封禁账号']];
+  content.replaceChildren(heading('欢迎来到校园票务','参与者购票 · 组织者发布 · 检票员核销 · 管理员治理'),
+    el('div',{class:'panel auth-card'},tabs,form,el('div',{class:'actions'},
+        button('游客浏览演出',()=>setPage('events'),'secondary'))), el('div',
+      {class:'role-grid'},roleCards.map(([name,description])=>panel(el('h3',
+        {},name),el('p',{class:'muted'},description)))));
+}
+function verifyPage() {
+  const form=el('form',{class:'stack'},field('真实姓名','name',
+      'text',{required:true,placeholder:'与身份证一致'}),field('身份证号',
+      'idNumber','text',{required:true,placeholder:'18 位 · 同一身份证仅允许绑定一个账号'}),
+    el('button',{class:'button full'},'提交实名信息'));
+  submitForm(form,async f=>{await api('/api/verify',{method:'POST',
+        body:formData(f)});state.user=await api('/api/me');setPage(signedInPage());
+      showNotice('实名认证成功');});
+  content.replaceChildren(heading('完成实名认证后即可购票','购票前须完成实名认证；认证信息仅用于购票与入场核验。'),
+    el('div',{class:'panel auth-card'},el('h2',{},'实名认证'),el('div',
+        {class:'divider'}),form));
+}
+function loginRequired() { if (state.user) return true;
+  setPage('auth');
+  showNotice('请先登录');
+  return false;
+  }
+function accountDialog() {
+  if (!state.user) return setPage('auth');
+  modal('账号设置',el('div',{class:'stack'},el('p',{},`${state.user.phone} · ${roles[state.user.role] || state.user.role}`),
+      el('p',{},`实名信息：${state.user.name || '尚未认证'}`),button('实名认证',
+        ()=>{dialog.close();setPage('verify');},'secondary'),button('退出登录',
+        ()=>run(async()=>{await api('/api/logout',{method:'POST',
+        body:{}});state.user=null;state.checkins=[];dialog.close();
+        setPage('auth');},'已退出登录'),'danger')));
+}
+function eventCard(event) {
+  const first=event.sessions?.[0];
+  const tiers=(event.sessions||[]).flatMap(s=>s.tiers||[]);
+  const available=tiers.some(t=>t.remaining>0);
+  return el('article',{class:'card'},el('div',{class:'card-cover'},
+      event.kind==='lecture'?'🎓 讲座':'🎭 付费演出'),el('div',{class:'card-body'},
+      el('h3',{},event.title),el('div',{class:'row'},tag(label(event.kind)),
+        event.theme && tag(event.theme)),el('p',{class:'muted'},
+        `${event.speaker || '嘉宾待定'} · ${time(first?.startsAt)} · ${first?.location || '地点待定'}`),
+      el('div',{class:'list-row'},el('strong',{},tiers.length?`${money(Math.min(...tiers.map(t=>t.priceCents)))} 起`:'票价待定'),
+        button(available?'查看购票':'查看候补',()=>eventDetail(event.id),
+        'secondary small'))));
+}
+async function eventsPage() {
+  const form=el('form',{class:'filters'},field('搜索','keyword',
+      'search',{placeholder:'搜索演出、主讲人或主题'}),field('开始日期','from',
+      'date'),field('结束日期','to','date'),field('地点','location',
+      'text'),field('主讲 / 明星','speaker','text'),field('主题','theme',
+      'text'),selectField('余票','available',[['','全部'],['true',
+        '仅看有余票']]),el('button',{class:'button'},'搜索'));
+  if(state.user?.role==='admin') form.insertBefore(field('活动 ID','id','text'),form.lastChild);
+  const results=el('div');
+  const load = async () => {
+    const values = formData(form);
+    if (values.from && values.to && values.from > values.to) throw new Error('开始日期不能晚于结束日期');
+    if (values.from) values.from = iso(`${values.from}T00:00:00`);
+    if (values.to) values.to = iso(`${values.to}T23:59:59.999`);
+    const params = new URLSearchParams(Object.entries(values).filter(([, value]) => value));
+    const events = await api('/api/events?' + params);
+    results.replaceChildren(events.length ? el('div', { class: 'grid' }, events.map(eventCard)) : empty('暂无符合条件的活动', '试试调整筛选条件。'));
+  };
+  submitForm(form,load);
+  state.refresh=load;
+  content.replaceChildren(panel(form),results);
+  await load();
+}
+async function eventDetail(id) { state.detailId=id;
+  setPage('detail');
+  }
+async function detailPage() {
+  const event = await api('/api/events/' + encodeURIComponent(state.detailId));
+  const sessions = event.sessions || [];
+  let selectedSession = sessions[0];
+  let chosen = selectedSession?.tiers?.[0];
+  const choices = el('div', { class: 'stack' });
+  const total = el('strong');
+  const information = el('div', { class: 'stack' });
+  const submit = button('提交订单', () => run(async () => {
+    if (!loginRequired()) return;
+    if (!state.user.name) {
+      setPage('verify');
+      return;
+    }
+    if (!chosen) throw new Error('请选择票档');
+    const order = await api('/api/orders', {
+      method: 'POST',
+      body: { tierId: chosen.id, waitlist: chosen.remaining <= 0 }
     });
-    content.replaceChildren(heading('现场检票', '核验入场码与实名信息。'), panel(form));
+    state.paymentOrder = order;
+    setPage('payment');
+  }), 'full');
+  function update() {
+    total.textContent = chosen ? `合计 ${money(chosen.priceCents)}` : '请选择票档';
+    submit.textContent = chosen?.remaining <= 0 ? '预付全款加入候补' : '提交订单';
+    information.replaceChildren(
+      el('p', {}, `时间：${time(selectedSession?.startsAt)}`),
+      el('p', {}, `地点：${selectedSession?.location || '待定'}`),
+      el('p', {}, `主讲 / 主演：${event.speaker || '待定'}`),
+      el('p', {}, `票档状态：${chosen?.remaining > 0 ? '有余票' : '售罄可候补'}`)
+    );
+    if (state.user?.role === 'admin') {
+      information.append(el('p', { class: 'muted' }, `活动 ID：${event.id} · 场次 ID：${selectedSession?.id || '—'}`));
+    }
+  }
+  sessions.forEach(session => {
+    choices.append(el('h3', {}, `${time(session.startsAt)} · ${session.location}`));
+    (session.tiers || []).forEach(tier => {
+      const radio = el('input', {
+        type: 'radio', name: 'tier', value: tier.id, checked: tier === chosen,
+        onchange: () => { chosen = tier; selectedSession = session; update(); }
+      });
+      choices.append(el('label', { class: 'choice' }, radio, el('span', {}, tier.name),
+        el('span', {}, `余量 ${tier.remaining}　${money(tier.priceCents)}`)));
+    });
+  });
+  update();
+  const banner = el('div', { class: 'banner' },
+    el('span', { class: 'banner-icon' }, event.kind === 'lecture' ? '🎓' : '🎭'),
+    el('div', {}, el('h2', {}, event.title), el('p', {}, `${label(event.kind)} · ${event.theme || '校园活动'}`)));
+  const left = el('div', {}, banner, panel(information),
+    panel(el('h3', {}, '演出简介'), el('p', { class: 'muted' }, event.theme || '欢迎参加本场校园活动。')),
+    panel(el('h3', {}, '演出须知'), el('p', { class: 'muted' }, '一人一票，凭票码及身份证入场；票档售罄后可预付全款加入候补。')));
+  const right = el('div', {}, panel(el('h3', {}, '购票 / 退票规则公示'), el('p', { class: 'muted' }, event.rules)),
+    panel(el('div', { class: 'stack' }, el('h3', {}, '选择场次与票档'), choices,
+      el('p', { class: 'muted' }, '每账号每场次限购 1 张'), total,
+      el('p', { class: 'muted' }, `实名观演人：${state.user?.name || '请先实名认证'}`), submit)));
+  content.replaceChildren(button('← 返回演出', () => setPage('events'), 'secondary small'),
+    el('div', { class: 'two-col detail-columns' }, left, right));
+}
+async function paymentPage() {
+  let order=state.paymentOrder;
+  if(!order){setPage('orders');
+    return;
+    }
+  const countdown=el('div',{class:'hint orange'});
+  const updateCountdown=()=>{if(order.state!=='pending'){countdown.textContent=`订单状态：${orderLabel(order.state)}`;
+      return;
+      }const seconds=Math.max(0,Math.ceil((new Date(order.paymentDeadline)-Date.now())/1000));
+    countdown.textContent=`请在 ${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')} 内完成支付；超时订单自动关闭，名额退回余票池`;
+    if(seconds===0)content.querySelectorAll('[data-payment-action]').forEach(control=>{control.disabled=true;});
+    };
+  updateCountdown();
+  const summary=panel(el('div',{class:'stack'},el('h3',{},
+        '订单摘要'),el('p',{},`演出：${order.eventTitle}`),el('p',{},`场次 / 票档：${time(order.startsAt)} · ${order.tierName}`),
+      el('p',{},`实名观演人：${order.viewerName||state.user?.name||'已实名用户'}`),
+      el('strong',{},`应付金额：${money(order.priceCents)}`)));
+  const result=panel(el('div',{class:'stack'},el('h3',{},'出票结果'),
+      el('div',{class:'hint green'},order.state==='issued'?'支付成功 · 已出票':order.state==='waiting'?'已预付 · 候补中':'支付完成后将在此显示出票信息'),
+      el('p',{},`座位号：${order.seat||'待分配'}`),el('p',{},`票码：${order.code||'待出票'}`),
+      el('p',{class:'muted'},'票码是入场凭证；检票时请同时出示身份证。')));
+  const pay=async success=>{order=await api(`/api/orders/${encodeURIComponent(order.id)}/pay`,{method:'POST',body:{success}});
+    state.paymentOrder=order;
+    await render();
+    showNotice(success?'支付操作完成':'已模拟支付失败');
+    };
+  const payButton = button('立即支付（模拟）',()=>run(()=>pay(true)),'full');
+  const failButton = button('模拟支付失败',()=>run(()=>pay(false)),'secondary');
+  payButton.dataset.paymentAction = 'pay';
+  failButton.dataset.paymentAction = 'fail';
+  if (order.state === 'pending' && Date.now() >= new Date(order.paymentDeadline).getTime()) {
+    payButton.disabled = true;
+    failButton.disabled = true;
+  }
+  const left=el('div',{},countdown,summary,panel(el('h3',{},
+        '支付方式'),el('p',{class:'muted'},'站内模拟支付 · 重复提交仅第一次生效')),order.state==='pending'&&el('div',
+      {class:'actions'},payButton,failButton));
+  content.replaceChildren(el('div',{class:'two-col'},left,result),button('查看我的订单',()=>setPage('orders'),'secondary'));
+  state.refresh=async()=>{updateCountdown();
+    if(order.state==='pending' && Date.now()>=new Date(order.paymentDeadline).getTime()){const orders=await api('/api/orders');
+      state.paymentOrder=orders.find(item=>item.id===order.id)||order;
+      await render();
+      }};
+}
+async function ordersPage() {
+  if(!loginRequired())return;
+  const filters=el('form',{class:'filters'},field('订单 ID','id','search'),field('用户 ID','userId','search'),el('button',{class:'button'},'查询'));
+  const tabs=el('div',{class:'tabs'});
+  const list=el('div',{class:'stack'});
+  let filter='all';
+  const drawTabs=()=>tabs.replaceChildren(...[['all','全部'],
+      ['pending','待支付'],['waiting','候补中'],['issued','已出票'],['refunded',
+        '已退款']].map(([value,text])=>button(text,()=>{filter=value;
+        drawTabs();draw();},filter===value?'':'secondary')));
+  const draw=()=>{const orders=(state.orders||[]).filter(o=>filter==='all'||o.state===filter);
+    list.replaceChildren(...(orders.length?orders.map(order=>{
+    const info=el('div',{class:'stack'},el('div',{class:'row'},
+        el('h3',{},order.eventTitle),tag(orderLabel(order.state),
+          order.state==='waiting'?'orange':'green')),el('p',{class:'muted'},
+        `${time(order.startsAt)} · ${order.location||''} · ${order.tierName} ${money(order.priceCents)}`));
+    if(order.state==='waiting')info.append(el('p',{},`已预付全款 · 候补第 ${order.waitlistPosition ?? '—'} 位`),
+      el('p',{class:'muted'},`报名截止：${time(order.registrationDeadline)}；未递补将自动退款`));
+    if(order.code)info.append(el('p',{},`座位：${order.seat||'待分配'} · 票码：${order.code}`));
+    if(order.refundPreview){const p=order.refundPreview;info.append(el('p',
+          {class:'muted'},p.allowed?`退票试算：手续费 ${money(p.feeCents)}，预计退回 ${money(p.refundCents)}`:`退票：${p.reason||'当前不可退款'}`));
+      }
+    if(state.user.role==='admin')info.append(el('p',{class:'muted'},`订单 ID：${order.id} · 用户 ID：${order.userId}`));
+    const actions=el('div',{class:'actions'});if(state.user.role==='participant'){
+      if(order.state==='pending')actions.append(button('继续支付',()=>{state.paymentOrder=order;setPage('payment');},'secondary'));
+      if(order.state==='issued'&&order.refundPreview?.allowed)actions.append(button('申请退票',()=>orderAction(order.id,'refund',{}),'secondary'));
+      if(order.state==='waiting')actions.append(button('退出候补',()=>orderAction(order.id,'leave',{}),'secondary'));
+    }return panel(el('div',{class:'list-row'},info,actions));}):[empty('暂无订单','订单记录会显示在这里。')]));
+    };
+  const load=async()=>{const v=formData(filters);
+    const params=new URLSearchParams(Object.entries(v).filter(([,value])=>value));
+    state.orders=await api('/api/orders?'+params);
+    draw();
+    };
+  submitForm(filters,load);
+  drawTabs();
+  state.refresh=load;
+  content.replaceChildren(tabs,state.user.role==='admin'?panel(filters):null,list);
+  await load();
+}
+function orderAction(id,action,body){run(async()=>{await api(`/api/orders/${encodeURIComponent(id)}/${action}`,
+      {method:'POST',body});await render();},'操作已完成');
+  }
+function eventEditor(event={}) {
+  const sessions=el('div',{class:'stack'});
+  (event.sessions?.length?event.sessions:[{}]).forEach(session=>sessions.append(sessionEditor(session)));
+  const form=el('form',{class:'stack'},el('h3',{},event.id?'修改演出申请':'新建演出申请'),
+    field('演出名称（必填）','title','text',{required:true,value:event.title||''}),
+    el('div',{class:'form-grid'},field('主演 / 主讲人','speaker',
+        'text',{required:true,value:event.speaker||''}),selectField('类型',
+        'kind',[['performance','付费演出'],['lecture','讲座']],event.kind||'performance'),
+      field('主题','theme','text',{required:true,value:event.theme||''}),
+      field('计划发布时间','publishAt','datetime-local',{required:true,
+        value:localTime(event.publishAt)})),sessions,button('＋ 添加场次',
+      ()=>sessions.append(sessionEditor()),'secondary'),el('button',
+      {class:'button full'},'提交平台管理员审核'));
+  submitForm(form,async f=>{const v=formData(f);const list=[...sessions.children].map(box=>({startsAt:iso(editorValue(box,
+        'startsAt')),endsAt:iso(editorValue(box,'endsAt')),location:editorValue(box,
+        'location'),saleAt:iso(editorValue(box,'saleAt')),deadline:iso(editorValue(box,
+        'deadline')),tiers:[...box.querySelectorAll('.tier-editor')].map(t=>({name:editorValue(t,
+        'tierName'),priceCents:Math.round(Number(editorValue(t,'tierPrice'))*100),
+        capacity:Number(editorValue(t,'tierCapacity'))}))}));if(!list.length||list.some(s=>!s.tiers.length))throw new Error('请至少添加一个场次和票档');
+      await api(event.id?`/api/events/${encodeURIComponent(event.id)}/resubmit`:'/api/events',
+        {method:'POST',body:{title:v.title,kind:v.kind,speaker:v.speaker,
+        theme:v.theme,publishAt:iso(v.publishAt),sessions:list}});
+      if(dialog.open)dialog.close();await render();showNotice('活动申请已提交');
+      });
+  if(event.id)modal('修改并重新提交',form);
+  else return form;
+}
+async function organizerPage() {
+  const events=await api('/api/events');
+  const reviews=await api('/api/reviews');
+  const mine = el('div', { class: 'stack' }, el('h3', {}, '我的活动'));
+  const table = el('table', { class: 'activity-table' });
+  table.append(el('thead', {}, el('tr', {}, ...['活动名称', '状态', '场次 / 票档', '操作'].map(title => el('th', {}, title)))));
+  const rows = el('tbody');
+  events.forEach(event => {
+    const actions = el('div', { class: 'actions' },
+      button('详情', () => eventDetail(event.id), 'secondary small'),
+      button('变更', () => changeDialog(event), 'secondary small'),
+      ['draft', 'rejected'].includes(event.status) && button('重新提交', () => eventEditor(event), 'secondary small'));
+    const tierCount = event.sessions.reduce((count, session) => count + session.tiers.length, 0);
+    rows.append(el('tr', {}, el('td', {}, event.title), el('td', {}, label(event.status)),
+      el('td', {}, `${event.sessions.length} / ${tierCount}`), el('td', {}, actions)));
+  });
+  table.append(rows);
+  mine.append(table);
+  if(!events.length)mine.append(el('p',{class:'muted'},'暂无活动'));
+  const progress=panel(el('h3',{},'审核进度'),reviews.length?reviews.map(r=>el('p',
+        {class:'muted'},`${r.eventTitle} · ${label(r.kind)} · ${label(r.status)}${r.reason?' · '+r.reason:''}`)):el('p',
+      {class:'muted'},'提交后审核进度与结论将在此显示。'));
+  content.replaceChildren(el('div',{class:'two-col'},el('div',{},panel(eventEditor()),progress),panel(mine)));
+}
+function reviewSummary(payload) {
+  if (!payload || typeof payload !== 'object') return '';
+  const lines = [];
+  if (payload.title) lines.push('活动：' + payload.title);
+  if (payload.reason) lines.push('原因：' + payload.reason);
+  for (const session of payload.sessions || []) {
+    lines.push([time(session.startsAt), time(session.endsAt), session.location].filter(Boolean).join(' · '));
+    for (const tier of session.tiers || []) lines.push(tier.name + ' ' + money(tier.priceCents) + ' / ' + tier.capacity + ' 张');
+  }
+  return lines.join('；');
+}
+async function reviewsPage() {
+  const reviews=await api('/api/reviews');
+  const users=await api('/api/users');
+  const pending=reviews.filter(r=>r.status==='pending');
+  const left=el('div',{class:'stack'});
+  for(const review of pending){const reason=el('textarea',{placeholder:'请填写驳回原因，将随结论一并提供给组织者'});
+    const submit=approved=>run(async()=>{if(!approved&&!reason.value.trim())throw new Error('驳回时请填写原因');
+        await api(`/api/reviews/${encodeURIComponent(review.id)}`,
+          {method:'POST',body:{approved,reason:reason.value}});await render();
+        },'审核结果已提交');
+    left.append(panel(el('div',{class:'stack'},el('div',{class:'row'},
+          el('h3',{},review.eventTitle),tag(`待审核 · ${label(review.kind)}`,
+          'orange')),el('p',{class:'muted'},`申请时间：${time(review.createdAt)} · ${review.reason||'暂无申请说明'}`),
+          el('p',{class:'muted'},reviewSummary(review.payload)),el('label',
+          {},'驳回原因（驳回时必填）',reason),el('div',{class:'actions'},button('审核通过',
+          ()=>submit(true)),button('驳回',()=>submit(false),'secondary')))));
+    }
+  if(!pending.length)left.append(empty('暂无待审核申请','新的申请会出现在这里。'));
+  const userSelect=selectField('账号','userId',users.map(u=>[String(u.id),`${u.phone} · ${roles[u.role]}${u.banned?' · 已封禁':''}`]));
+  const banReason=field('操作原因','reason','text',{placeholder:'请输入处理原因'});
+  const banForm=el('form',{class:'stack'},el('h3',{},'账号封禁'),
+    userSelect,banReason,el('div',{class:'actions'},button('封禁账号',
+        ()=>ban(true),'danger'),button('解除封禁',()=>ban(false),'secondary')));
+  function ban(banned){run(async()=>{const v=formData(banForm);
+        if(!v.userId||!v.reason.trim())throw new Error('请选择账号并填写操作原因');
+        await api(`/api/users/${encodeURIComponent(v.userId)}/ban`,
+        {method:'POST',body:{banned,reason:v.reason}});await render();
+        },'账号状态已更新');
+    }left.append(panel(banForm));
+  const recent=reviews.filter(r=>r.status!=='pending').slice(0,6);
+  const right=el('div',{},panel(el('h2',{},'今日待办'),el('p',
+        {class:'muted'},`演出审核 ${pending.length} 件待处理`),el('p',{class:'muted'},
+        '签到窗口开启 · 数据查询 · 违规账号处理')),panel(el('h2',{},'最近处理记录'),recent.length?recent.map(r=>el('p',
+        {class:'muted'},`${r.eventTitle} · ${label(r.kind)} · ${label(r.status)}`)):el('p',
+        {class:'muted'},'暂无处理记录')));
+  content.replaceChildren(el('div',{class:'two-col equal-col'},left,right));
+}
+async function checkinPage() {
+  if(state.user.role==='admin'){
+    const events=await api('/api/events');
+    const choices=events.flatMap(e=>(e.sessions||[]).map(s=>[String(s.id),`${e.title} · ${time(s.startsAt)} · ${s.location}`]));
+    const form=el('form',{class:'stack'},selectField('选择场次',
+        'sessionId',choices,choices[0]?.[0]),el('button',{class:'button',
+          disabled:!choices.length},'开启检票窗口'));
+    submitForm(form,async f=>{await api(`/api/sessions/${encodeURIComponent(formData(f).sessionId)}/checkin-window`,
+          {method:'POST',body:{}});showNotice('检票窗口已开启');});
+    content.replaceChildren(heading('签到窗口','为指定场次开启检票。'),choices.length?panel(form):empty('暂无场次',
+        '活动场次会显示在这里。'),button('刷新活动状态',()=>run(async()=>{await api('/api/maintenance',
+          {method:'POST',body:{}});},'活动状态已刷新'),'secondary'));
     return;
   }
-  const events = await api('/api/events');
-  const choices = events.flatMap(event => (event.sessions || []).map(session =>
-    [String(session.id), `${event.title} · ${time(session.startsAt)} · ${session.location} · ${session.id}`]));
-  const windowForm = el('form', { class: 'stack' },
-    selectField('选择场次', 'sessionId', choices, choices[0]?.[0]),
-    el('button', { class: 'button', type: 'submit', disabled: !choices.length }, '开启检票窗口'));
-  submitForm(windowForm, async f => {
-    await api(`/api/sessions/${encodeURIComponent(formData(f).sessionId)}/checkin-window`, { method: 'POST', body: {} });
-    showNotice('检票窗口已开启');
-  });
-  content.replaceChildren(heading('检票窗口', '为指定场次开启检票。'),
-    choices.length ? panel(windowForm) : empty('暂无可选场次', '活动场次会显示在这里。'),
-    button('刷新活动状态', () => run(async () => { await api('/api/maintenance', { method: 'POST', body: {} }); }, '活动状态已刷新'), 'secondary'));
+  const status = await api('/api/checkin-status');
+  const statusBar = el('div', { class: 'hint' });
+  const updateStatus = current => {
+    statusBar.className = `hint ${current.openCount ? 'green' : 'orange'}`;
+    statusBar.textContent = `签到窗口${current.openCount ? '已开启' : '尚未开启'} · 已开启 ${current.openCount} / ${current.sessionCount} 场`;
+  };
+  updateStatus(status);
+  state.refresh = async () => updateStatus(await api('/api/checkin-status'));
+  const result = el('div', { class: 'hint' }, '等待核验');
+  const records = el('div', { class: 'stack' });
+  const draw = () => {
+    state.checkins = state.checkins.filter(record => record.day === new Date().toDateString());
+    records.replaceChildren(...(state.checkins.length
+      ? state.checkins.map(record => el('p', { class: 'muted' }, `${record.time}　${record.code}　已签到`))
+      : [el('p', { class: 'muted' }, '本次会话暂无核销记录')]));
+  };
+  draw();
+  const form=el('form',{class:'stack'},el('h3',{},'票码核销'),
+    el('p',{class:'muted'},'输入观众提供的唯一票码，同时核对完整身份证号。'),field('观众票码',
+      'code','text',{required:true}),field('身份证号','idNumber','text',
+      {required:true,placeholder:'请输入完整身份证号'}),el('button',{class:'button full'},
+      '核销并放行'));
+  form.addEventListener('submit',event=>{event.preventDefault();
+      const v=formData(form);run(async()=>{try{const decision=await api('/api/checkin',
+        {method:'POST',body:v});result.textContent=decision.message||'核验通过，准予入场';
+        result.className='hint green';state.checkins.unshift({code:v.code,
+        time:new Date().toLocaleTimeString('zh-CN'),day:new Date().toDateString()});
+        draw();form.reset();}catch(error){result.textContent=error.message;
+        result.className='hint orange';}});});
+  content.replaceChildren(statusBar,el('div',{class:'two-col'},
+      el('div',{},panel(form),panel(el('h3',{},'本次登录 · 今日核销记录'),
+        records)),el('div',{},panel(el('h3',{},'核验结果'),result),panel(el('h3',
+        {},'其他情形的提示'),el('p',{class:'muted'},'重复核验、无效票码、身份不匹配或窗口未开启时，系统将提示原因。')))));
+}
+async function statisticsPage() {
+  const events=await api('/api/events');
+  const sessions=events.flatMap(event=>(event.sessions||[]).map(session=>({event,session})));
+  if(!sessions.length){content.replaceChildren(empty('暂无场次','创建活动后可查看统计。'));
+    return;
+    }
+  let selected=sessions.find(x=>String(x.session.id)===String(state.statisticsSession))||sessions[0];
+  const tabs=el('div',{class:'tabs'});
+  const result=el('div');
+  const load=async()=>{state.statisticsSession=selected.session.id;
+    tabs.replaceChildren(...sessions.map(item=>button(`${time(item.session.startsAt)} ${item.event.title}`,
+          ()=>{selected=item;run(load);},item===selected?'':'secondary')));
+    const data=await api(`/api/sessions/${encodeURIComponent(selected.session.id)}/statistics`);
+    const fields=[['上座率（到场 / 出票）',data.attendanceRate==null?'—':`${(data.attendanceRate*100).toFixed(1)}%`],
+      ['购票总人数',data.purchased],['实际到场人数',data.attended],['候补人数',
+        data.waiting],['退票数',data.refunded],['缺席数',data.absent]];
+    const link=el('a',{class:'button full',href:`/api/events/${encodeURIComponent(selected.event.id)}/export?sessionId=${encodeURIComponent(selected.session.id)}`,
+        download:''},'导出名单（.csv）');
+    result.replaceChildren(el('div',{class:'metrics'},fields.map(([name,
+          value])=>el('div',{class:'metric'},el('strong',{},value),
+          name))),el('div',{class:'hint'},'上座率 = 实际到场人数 ÷ 出票数；出票数为 0 时不参与计算。'),
+      el('div',{class:'two-col'},panel(el('div',{class:'stack'},
+          el('h3',{},'导出本场观众名单'),el('p',{class:'muted'},'字段：姓名、联系方式、座位号；仅限本场次，导出操作记入审计日志。'),
+          link)),panel(el('h3',{},'缺席与异常'),el('p',{class:'muted'},
+          `本场缺席 ${data.absent} 人。`))),panel(el('h3',{},'各票档售票明细'),
+        ...(selected.session.tiers||[]).map(t=>el('p',{class:'muted'},
+          `${t.name} · ${money(t.priceCents)} · 总量 ${t.capacity} · 余 ${t.remaining}`))));
+    };
+  content.replaceChildren(tabs,result);
+  await load();
+  state.refresh = async () => {
+    const fresh = await api('/api/events');
+    const event = fresh.find(item => String(item.id) === String(selected.event.id));
+    const session = event?.sessions.find(item => String(item.id) === String(selected.session.id));
+    if (session) selected.session = session;
+    await load();
+  };
 }
 async function render() {
-  state.refresh = null;
+  state.refresh=null;
   nav();
-  try {
-    const pages = { events: eventsPage, orders: ordersPage, messages: messagesPage, organizer: organizerPage, reviews: reviewsPage, users: usersPage, audit: auditPage, checkin: checkinPage };
-    await (pages[state.page] || eventsPage)();
-  } catch (error) { content.replaceChildren(empty('加载失败', error.message)); }
+  content.dataset.page=state.page;
+  try {const pages={auth:authPage,verify:verifyPage,events:eventsPage,
+      detail:detailPage,payment:paymentPage,orders:ordersPage,
+      organizer:organizerPage,statistics:statisticsPage,reviews:reviewsPage,
+      checkin:checkinPage,messages:messagesPage,audit:auditPage,
+      users:usersPage};
+    await (pages[state.page]||authPage)();
+    }
+  catch(error){content.replaceChildren(empty('加载失败',error.message));
+    }
 }
+
 document.querySelector('#account-button').addEventListener('click', accountDialog);
+document.querySelector('#brand').addEventListener('click', event => { event.preventDefault(); setPage(state.user ? signedInPage() : 'auth'); });
 dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
 setInterval(() => { if (!dialog.open && !document.hidden && state.refresh) state.refresh().catch(() => {}); }, 15000);
+setInterval(() => { if (state.page === 'payment' && state.refresh && !document.hidden) state.refresh().catch(() => {}); }, 1000);
 (async () => {
-  try { state.user = await api('/api/me'); if (state.user?.role === 'checker') state.page = 'checkin'; }
-  catch (error) { showNotice(error.message, true); }
+  try { state.user = await api('/api/me'); } catch (error) { showNotice(error.message, true); }
+  state.page = signedInPage();
   await render();
 })();

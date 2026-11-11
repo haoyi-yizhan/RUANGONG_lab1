@@ -1,20 +1,20 @@
 {
-  "timestamp": "2026-11-07T03:01:18.034Z",
+  "timestamp": "2026-11-11T03:18:04.438Z",
   "method": "Approximate nonblank, non-comment-only lines in handwritten src and public files; JavaScript total excludes HTML and CSS. Comment detection is heuristic.",
-  "applicationJavaScript": 1792,
-  "total": 1904,
+  "applicationJavaScript": 2046,
+  "total": 2613,
   "files": [
     {
       "file": "public/app.js",
-      "lines": 485
+      "lines": 703
     },
     {
       "file": "public/index.html",
-      "lines": 30
+      "lines": 26
     },
     {
       "file": "public/style.css",
-      "lines": 82
+      "lines": 541
     },
     {
       "file": "src/auth.mjs",
@@ -34,11 +34,11 @@
     },
     {
       "file": "src/operations.mjs",
-      "lines": 135
+      "lines": 143
     },
     {
       "file": "src/queries.mjs",
-      "lines": 118
+      "lines": 133
     },
     {
       "file": "src/security.mjs",
@@ -46,7 +46,7 @@
     },
     {
       "file": "src/server.mjs",
-      "lines": 221
+      "lines": 223
     },
     {
       "file": "src/support.mjs",
@@ -58,7 +58,7 @@
     },
     {
       "file": "src/trading.mjs",
-      "lines": 166
+      "lines": 177
     }
   ]
 }
