@@ -249,7 +249,7 @@ function setPage(page) { state.refresh = null;
   }
 function signedInPage() {
   if (!state.user) return 'auth';
-  if (!state.user.name && ['participant','organizer'].includes(state.user.role)) return 'verify';
+  if (!state.user.verified && ['participant','organizer'].includes(state.user.role)) return 'verify';
   return ({ participant:'events', organizer:'organizer', admin:'reviews', checker:'checkin' })[state.user.role] || 'events';
 }
 function recoveryModal(title, code, next) {
@@ -313,7 +313,8 @@ function loginRequired() { if (state.user) return true;
 function accountDialog() {
   if (!state.user) return setPage('auth');
   modal('账号设置',el('div',{class:'stack'},el('p',{},`${state.user.phone} · ${roles[state.user.role] || state.user.role}`),
-      el('p',{},`实名信息：${state.user.name || '尚未认证'}`),button('实名认证',
+      el('p',{},`实名认证：${state.user.verified ? `已认证（${state.user.name}）` : '未认证，不能购票或加入候补'}`),
+      !state.user.verified && ['participant', 'organizer'].includes(state.user.role) && button('实名认证',
         ()=>{dialog.close();setPage('verify');},'secondary'),button('退出登录',
         ()=>run(async()=>{await api('/api/logout',{method:'POST',
         body:{}});state.user=null;state.checkins=[];dialog.close();
@@ -368,8 +369,12 @@ async function detailPage() {
   const information = el('div', { class: 'stack' });
   const submit = button('提交订单', () => run(async () => {
     if (!loginRequired()) return;
-    if (!state.user.name) {
+    if (state.user.role !== 'participant') return;
+    state.user = await api('/api/me');
+    if (!loginRequired()) return;
+    if (!state.user.verified) {
       setPage('verify');
+      showNotice('请先完成实名认证，再购票或加入候补');
       return;
     }
     if (!chosen) throw new Error('请选择票档');
@@ -382,7 +387,11 @@ async function detailPage() {
   }), 'full');
   function update() {
     total.textContent = chosen ? `合计 ${money(chosen.priceCents)}` : '请选择票档';
-    submit.textContent = chosen?.remaining <= 0 ? '预付全款加入候补' : '提交订单';
+    submit.disabled = Boolean(state.user && state.user.role !== 'participant');
+    if (!state.user) submit.textContent = '登录后购票';
+    else if (state.user.role !== 'participant') submit.textContent = '仅参与者可购票';
+    else if (!state.user.verified) submit.textContent = '先实名认证';
+    else submit.textContent = chosen?.remaining <= 0 ? '预付全款加入候补' : '提交订单';
     information.replaceChildren(
       el('p', {}, `时间：${time(selectedSession?.startsAt)}`),
       el('p', {}, `地点：${selectedSession?.location || '待定'}`),
@@ -414,11 +423,18 @@ async function detailPage() {
   const right = el('div', {}, panel(el('h3', {}, '购票 / 退票规则公示'), el('p', { class: 'muted' }, event.rules)),
     panel(el('div', { class: 'stack' }, el('h3', {}, '选择场次与票档'), choices,
       el('p', { class: 'muted' }, '每账号每场次限购 1 张'), total,
-      el('p', { class: 'muted' }, `实名观演人：${state.user?.name || '请先实名认证'}`), submit)));
+      el('p', { class: 'muted' }, state.user?.verified
+        ? `实名观演人：${state.user.name}` : '尚未实名认证，不能购票或加入候补'), submit)));
   content.replaceChildren(button('← 返回演出', () => setPage('events'), 'secondary small'),
     el('div', { class: 'two-col detail-columns' }, left, right));
 }
 async function paymentPage() {
+  if (!loginRequired()) return;
+  if (!state.user.verified) {
+    setPage('verify');
+    showNotice('请先完成实名认证');
+    return;
+  }
   let order=state.paymentOrder;
   if(!order){setPage('orders');
     return;

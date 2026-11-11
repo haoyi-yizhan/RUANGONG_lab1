@@ -18,7 +18,10 @@ const system = new TicketingSystem();
 system.bootstrap();
 // All fixtures live in the in-memory database, isolated from the application data.
 const participant = system.register({ phone: '13900000001', password: 'Browser123!', role: 'participant' }).user;
+// A display name must never be treated as proof of identity verification.
+system.db.prepare('UPDATE users SET name=? WHERE id=?').run('尚未实名的显示名', participant.id);
 const organizer = system.db.prepare("SELECT id FROM users WHERE role='organizer' LIMIT 1").get().id;
+system.verify(organizer, { name: '校园活动中心', idNumber: '110101199001010026' });
 const admin = system.db.prepare("SELECT id FROM users WHERE role='admin' LIMIT 1").get().id;
 const now = Date.now();
 const iso = value => new Date(value).toISOString();
@@ -125,6 +128,23 @@ try {
   await cdp('Page.navigate',{url:address}); await page('auth');
   await snap('ui-01-login.png');
   await login('13900000001','Browser123!'); await page('verify'); await snap('ui-02-verify.png');
+  await nav('events'); await page('events');
+  await fill('keyword','校园秋日音乐会'); await submit('#content form');
+  await until("document.querySelector('#content').textContent.includes('校园秋日音乐会')");
+  await click('查看购票'); await page('detail');
+  await until("document.querySelector('#content').textContent.includes('先实名认证')");
+  assert.equal(await evaluate("[...document.querySelectorAll('#content button')].some(b=>b.textContent==='提交订单')"), false);
+  await screenshot('browser-unverified.png');
+  const tierId = system.listEvents(null).find(event => event.title === '校园秋日音乐会').sessions[0].tiers[0].id;
+  const rejected = await evaluate(`(async () => {
+    const response = await fetch('/api/orders', { method: 'POST', headers: {'content-type':'application/json'},
+      body: JSON.stringify({tierId:${JSON.stringify(tierId)},waitlist:true,verified:true}) });
+    return {status:response.status,body:await response.json()};
+  })()`);
+  assert.equal(rejected.status, 400);
+  assert.equal(rejected.body.error.code, 'IDENTITY_REQUIRED');
+  await click('先实名认证'); await page('verify');
+  assert.equal(system.listOrders(participant.id).length, 0);
   await fill('name','浏览器观众'); await fill('idNumber','110101199001010018'); await submit('#content form'); await page('events');
   await fill('keyword','校园秋日音乐会'); await submit('#content form');
   await until("document.querySelector('#content').textContent.includes('校园秋日音乐会')"); await snap('ui-03-events.png','browser-home.png');
@@ -165,7 +185,11 @@ try {
   assert.equal(errors.length,0,`Browser errors: ${errors.join(',')}`);
   const results={browser:browserPath.includes('msedge')?'Microsoft Edge headless':'Chrome headless',passed:true,
     screens:['login','verify','events','detail','payment','orders','organizer','admin','checkin','statistics'],
-    interactiveChecks:['login','identity verification','event filtering','ticket selection','create order','payment countdown','payment and issuance','order filtering and 80 yuan refund','organizer application','admin approval and checkin window','checker ticket and identity verification','six statistics cards and export link','mobile layout without horizontal overflow'],runtimeErrors:errors,completedAt:new Date().toISOString()};
+    interactiveChecks:['login','unverified buyer routed to verification with no order','forged verification rejected by API',
+      'identity verification','event filtering','ticket selection','create order','payment countdown','payment and issuance',
+      'order filtering and 80 yuan refund','organizer application','admin approval and checkin window',
+      'checker ticket and identity verification','six statistics cards and export link','mobile layout without horizontal overflow'],
+    runtimeErrors:errors,completedAt:new Date().toISOString()};
   await writeFile(join(artifacts,'browser-results.json'),JSON.stringify(results,null,2));
   await copyFile(join(artifacts,'browser-results.json'),join(evidence,'browser-results.json'));
   console.log(JSON.stringify(results,null,2));

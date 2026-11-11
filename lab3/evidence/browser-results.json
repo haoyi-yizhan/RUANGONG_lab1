@@ -15,6 +15,8 @@
   ],
   "interactiveChecks": [
     "login",
+    "unverified buyer routed to verification with no order",
+    "forged verification rejected by API",
     "identity verification",
     "event filtering",
     "ticket selection",
@@ -29,5 +31,5 @@
     "mobile layout without horizontal overflow"
   ],
   "runtimeErrors": [],
-  "completedAt": "2026-11-11T03:18:33.594Z"
+  "completedAt": "2026-11-11T03:48:07.187Z"
 }

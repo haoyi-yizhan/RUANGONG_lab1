@@ -144,6 +144,45 @@ test('an interrupted refund rolls back its payment and ticket state together', t
 });
 
 import { createApplication } from '../src/server.mjs';
+test('unverified HTTP buyer cannot buy or prepay waitlist even with a name and forged verification', async t => {
+  const x = setup(t);
+  const event = x.event();
+  const buyer = x.user('participant', false);
+  x.system.db.prepare('UPDATE users SET name=? WHERE id=?').run('Display name only', buyer.id);
+  const server = createApplication({ system: x.system });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const login = await fetch(`${base}/api/login`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ phone: buyer.phone, password: PASSWORD }),
+  });
+  assert.equal((await login.json()).data.verified, false);
+  const cookie = login.headers.get('set-cookie').split(';')[0];
+  const headers = { 'content-type': 'application/json', cookie };
+  const tierId = event.sessions[0].tiers[0].id;
+  for (const soldOut of [false, true]) {
+    if (soldOut) x.system.createOrder(x.user().id, { tierId });
+    for (const waitlist of [false, true]) {
+      const response = await fetch(`${base}/api/orders`, {
+        method: 'POST', headers,
+        body: JSON.stringify({ tierId, waitlist, verified: true, name: 'Forged', idNumber: '110101199001010018' }),
+      });
+      assert.equal(response.status, 400);
+      assert.equal((await response.json()).error.code, 'IDENTITY_REQUIRED');
+    }
+  }
+  assert.equal(x.system.listOrders(buyer.id).length, 0);
+  assert.equal(x.system.db.prepare('SELECT COUNT(*) AS n FROM payments').get().n, 0);
+  assert.equal(x.system.db.prepare('SELECT COUNT(*) AS n FROM waitlist').get().n, 0);
+  x.system.verify(buyer.id, { name: 'Real viewer', idNumber: '110101199001010018' });
+  const response = await fetch(`${base}/api/orders`, {
+    method: 'POST', headers, body: JSON.stringify({ tierId, waitlist: true }),
+  });
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).data.state, 'waiting');
+});
+
 test('50 simultaneous HTTP purchases reserve one seat and queue the other 49', async t => {
   const x = setup(t); const event = x.event();
   const users = Array.from({ length: 50 }, () => x.user());

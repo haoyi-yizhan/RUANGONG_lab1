@@ -74,6 +74,8 @@ export const tradingMethods = {
   },
 
   pay(actorId, orderId, { success = true } = {}) {
+    const actor = this.actor(actorId, ['participant']);
+    ensure(actor.id_number, 'IDENTITY_REQUIRED', '请先完成实名认证');
     this.ownedOrder(actorId, orderId);
     ensure(typeof success === 'boolean', 'INVALID_INPUT', '模拟支付结果无效');
     this.maintain();
