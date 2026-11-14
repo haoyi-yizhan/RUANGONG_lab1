@@ -42,19 +42,22 @@
 
 ## 构建与验证
 
-在本目录运行，无需 `npm install`。若 PowerShell 限制 npm.ps1，可使用 `npm.cmd` 或直接执行脚本。
+正常启动、业务测试和构建无需安装第三方包。运行 ESLint / Prettier 检查前，在本目录执行一次 `npm.cmd ci` 安装锁定版本的开发工具；这些包只用于开发检查。若 PowerShell 限制 npm.ps1，可使用 `npm.cmd` 或直接执行脚本。
 
 | 目的 | 命令 |
 |---|---|
 | 自动验收 | `npm test` |
 | 保存测试证据 | `npm run test:evidence` |
 | 语法与基础空白风格检查 | `npm run check` |
+| ESLint 静态与风格检查 | `npm run lint` |
+| Prettier 格式检查 | `npm run format:check` |
+| 保存风格检查证据 | `npm run style:evidence` |
 | 代码规模 | `npm run count` |
 | 1 万订单、20 并发、100 查询 | `npm run benchmark` |
 | 实际浏览器操作及截图 | `npm run test:browser` |
 | 校验并构建独立运行目录 | `npm run build` |
 
-JavaScript 由 Node.js 直接执行，构建进行语法检查、复制运行文件，输出到 `dist/ticketing-时间戳/`，其中执行 `node src/server.mjs` 即可运行。每次保留旧构建。SQLite 的 ExperimentalWarning 是 Node 22 内置 API 提示，不是失败。基础风格检查不等同于完整 ESLint 分析。
+JavaScript 由 Node.js 直接执行，构建进行语法检查、复制运行文件，输出到 `dist/ticketing-时间戳/`，其中执行 `node src/server.mjs` 即可运行。每次保留旧构建。SQLite 的 ExperimentalWarning 是 Node 22 内置 API 提示，不是失败。`check` 为基础检查，`lint` 与 `format:check` 才是正式静态及格式检查；规则、首次结果和修正后结果见 `docs/代码风格检查.md` 与 `evidence/style/`。
 
 浏览器测试隐藏运行本机 Edge/Chrome，可用 `CHROME_PATH` 指定浏览器，截图在 `artifacts/`；正式运行证据在 `evidence/`。测试采用独立内存库或临时库，不影响正常运行数据。
 

@@ -22,9 +22,15 @@ export function matchesSecret(secret, stored) {
 }
 
 export function validatePassword(password) {
-  ensure(typeof password === 'string' && password.length >= 10 && password.length <= 128
-    && /[a-zA-Z]/u.test(password) && /[0-9]/u.test(password),
-  'WEAK_PASSWORD', '密码须为 10～128 位，且包含字母和数字');
+  ensure(
+    typeof password === 'string' &&
+      password.length >= 10 &&
+      password.length <= 128 &&
+      /[a-zA-Z]/u.test(password) &&
+      /[0-9]/u.test(password),
+    'WEAK_PASSWORD',
+    '密码须为 10～128 位，且包含字母和数字',
+  );
 }
 
 export function secretToken() {

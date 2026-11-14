@@ -8,7 +8,9 @@ let checked = 0;
 let failures = 0;
 for (const directory of ['src', 'public', 'scripts', 'tests']) {
   for (const entry of readdirSync(join(root, directory), { recursive: true })) {
-    if (!/\.(mjs|js)$/u.test(entry)) continue;
+    if (!/\.(mjs|js)$/u.test(entry)) {
+      continue;
+    }
     const filename = join(root, directory, entry);
     const result = spawnSync(process.execPath, ['--check', filename], { encoding: 'utf8' });
     if (result.status !== 0) {
@@ -25,5 +27,7 @@ for (const directory of ['src', 'public', 'scripts', 'tests']) {
     checked += 1;
   }
 }
-console.log(`Checked ${checked} JavaScript files: syntax, no tabs, no trailing whitespace. Failures: ${failures}`);
+console.log(
+  `Checked ${checked} JavaScript files: syntax, no tabs, no trailing whitespace. Failures: ${failures}`,
+);
 process.exitCode = failures ? 1 : 0;

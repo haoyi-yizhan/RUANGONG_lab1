@@ -3,15 +3,26 @@ import { ensure } from './errors.mjs';
 
 export const supportMethods = {
   audit(actor, action, type, id, before = '', after = '') {
-    this.db.prepare(`INSERT INTO audit
+    this.db
+      .prepare(
+        `INSERT INTO audit
       (actor_id,action,object_type,object_id,before_value,after_value,created_at)
-      VALUES (?,?,?,?,?,?,?)`).run(actor || 'system', action, type, id,
-      typeof before === 'string' ? before : JSON.stringify(before),
-      typeof after === 'string' ? after : JSON.stringify(after), this.now());
+      VALUES (?,?,?,?,?,?,?)`,
+      )
+      .run(
+        actor || 'system',
+        action,
+        type,
+        id,
+        typeof before === 'string' ? before : JSON.stringify(before),
+        typeof after === 'string' ? after : JSON.stringify(after),
+        this.now(),
+      );
   },
 
   notify(userId, body) {
-    this.db.prepare('INSERT INTO messages(id,user_id,body,created_at) VALUES (?,?,?,?)')
+    this.db
+      .prepare('INSERT INTO messages(id,user_id,body,created_at) VALUES (?,?,?,?)')
       .run(randomUUID(), userId, body, this.now());
   },
 
@@ -50,9 +61,17 @@ export const supportMethods = {
 
   listMessages(actorId) {
     const user = this.actor(actorId, ['participant', 'organizer', 'admin']);
-    return this.db.prepare(`SELECT id,body,created_at FROM messages
-      WHERE user_id=? ORDER BY created_at DESC,rowid DESC LIMIT 500`).all(user.id)
-      .map(row => ({ id: row.id, body: row.body, createdAt: new Date(row.created_at).toISOString() }));
+    return this.db
+      .prepare(
+        `SELECT id,body,created_at FROM messages
+      WHERE user_id=? ORDER BY created_at DESC,rowid DESC LIMIT 500`,
+      )
+      .all(user.id)
+      .map((row) => ({
+        id: row.id,
+        body: row.body,
+        createdAt: new Date(row.created_at).toISOString(),
+      }));
   },
 
   listAudit(actorId, filters = {}) {
@@ -68,8 +87,10 @@ export const supportMethods = {
       values.push(filters.objectId);
     }
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
-    return this.db.prepare(`SELECT * FROM audit ${where} ORDER BY sequence DESC LIMIT 1000`)
-      .all(...values).map(row => ({
+    return this.db
+      .prepare(`SELECT * FROM audit ${where} ORDER BY sequence DESC LIMIT 1000`)
+      .all(...values)
+      .map((row) => ({
         sequence: row.sequence,
         actorId: row.actor_id,
         action: row.action,

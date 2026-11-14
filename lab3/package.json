@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "description": "实验三：活动票务与报名系统",
-  "engines": { "node": ">=22.13.0" },
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "scripts": {
     "start": "node src/server.mjs",
     "test": "node --test tests/*.test.mjs",
@@ -12,7 +14,19 @@
     "test:browser": "node scripts/browser-smoke.mjs",
     "build": "node scripts/build.mjs",
     "check": "node scripts/check.mjs",
+    "lint": "eslint src scripts tests public/app.js eslint.config.mjs --max-warnings 0",
+    "lint:fix": "eslint src scripts tests public/app.js eslint.config.mjs --fix --max-warnings 0",
+    "format:check": "prettier --check \"src/**/*.mjs\" \"scripts/**/*.mjs\" \"tests/**/*.mjs\" \"public/*.{js,html,css}\" eslint.config.mjs .prettierrc.json package.json",
+    "format": "prettier --write \"src/**/*.mjs\" \"scripts/**/*.mjs\" \"tests/**/*.mjs\" \"public/*.{js,html,css}\" eslint.config.mjs .prettierrc.json package.json",
+    "style:evidence": "node scripts/style-evidence.mjs final",
     "count": "node scripts/count-lines.mjs",
     "benchmark": "node scripts/benchmark.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@stylistic/eslint-plugin": "5.10.0",
+    "eslint": "10.15.0",
+    "globals": "16.5.0",
+    "prettier": "3.10.1"
   }
 }

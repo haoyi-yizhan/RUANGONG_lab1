@@ -1,0 +1,156 @@
+{
+  "stage": "final",
+  "completedAt": "2026-11-14T06:11:50.601Z",
+  "environment": {
+    "node": "v22.17.0",
+    "platform": "win32"
+  },
+  "tools": {
+    "eslint": "10.15.0",
+    "prettier": "3.10.1"
+  },
+  "eslint": {
+    "files": 22,
+    "errors": 0,
+    "warnings": 0,
+    "fixableErrors": 0,
+    "fixableWarnings": 0
+  },
+  "prettier": {
+    "files": 26,
+    "failures": 0
+  },
+  "formatting": [
+    {
+      "file": ".prettierrc.json",
+      "passed": true,
+      "sha256": "1f999e47bca193ac9949a19b67b5adb38acecdda080901ec2bb90187c5cf666c"
+    },
+    {
+      "file": "eslint.config.mjs",
+      "passed": true,
+      "sha256": "7224f6d66fd438124764ee18b860329ea700e2f72b26e88af7840c54855f6cc3"
+    },
+    {
+      "file": "package.json",
+      "passed": true,
+      "sha256": "eb6c1d54c2ddb6906eb738468fa3242aec8d6c7dd8e7a087c64a01d0e5216301"
+    },
+    {
+      "file": "public/app.js",
+      "passed": true,
+      "sha256": "681f091d566800f66f669973397bf42cd9206f610ceb500f3d4ce06b40618e39"
+    },
+    {
+      "file": "public/index.html",
+      "passed": true,
+      "sha256": "5eade85b489e601e2de9ecd1255be574e85634cbe760409e7a886f62196b99fe"
+    },
+    {
+      "file": "public/style.css",
+      "passed": true,
+      "sha256": "c93537f48332f2fa58501a0bbdeb273630fc3b675b67e5becc39bf434c93567d"
+    },
+    {
+      "file": "scripts/benchmark.mjs",
+      "passed": true,
+      "sha256": "096ead3bc949ae5d16301eb5108c0c8fc65ef59561547923fec7f841feae0805"
+    },
+    {
+      "file": "scripts/browser-smoke.mjs",
+      "passed": true,
+      "sha256": "6a115c6e4b41fd75716e5a8efd4024599fbf0967e057bbad721da9ca8c29738c"
+    },
+    {
+      "file": "scripts/build.mjs",
+      "passed": true,
+      "sha256": "c47d81e49119afdbf2b4f8cfb11f7290febfb92ceece7eabdbf5cd8e12954056"
+    },
+    {
+      "file": "scripts/check.mjs",
+      "passed": true,
+      "sha256": "e2d9b84ee9994e91a8ea01e4f3985820900abf1e927601cc340eb179e70e2113"
+    },
+    {
+      "file": "scripts/count-lines.mjs",
+      "passed": true,
+      "sha256": "0e40b106c95149a3ea5463ca634142f4c0c25098fae72b880c8de14cf01735a9"
+    },
+    {
+      "file": "scripts/style-evidence.mjs",
+      "passed": true,
+      "sha256": "fbce8d792f5080db00748c6c152a18d8e49ae8725fa8331c282384aaaf840462"
+    },
+    {
+      "file": "scripts/test-evidence.mjs",
+      "passed": true,
+      "sha256": "befe3aa77b66eb87978776a11d376c9cdbebae00a954ede5dd13f519b338a7ff"
+    },
+    {
+      "file": "src/auth.mjs",
+      "passed": true,
+      "sha256": "6c194a567dd786da3ac38dc6ad858367c950516298d31bba935435e367fc3a52"
+    },
+    {
+      "file": "src/database.mjs",
+      "passed": true,
+      "sha256": "f73e442486abf21d668497f02b75a5c4fa387e7d1ffe347cecc843c9f469600c"
+    },
+    {
+      "file": "src/errors.mjs",
+      "passed": true,
+      "sha256": "cc529bd45ef94063a5e7747646a84b4c2d08651e95c14e6420fecb794f5a3169"
+    },
+    {
+      "file": "src/events.mjs",
+      "passed": true,
+      "sha256": "150e9cea15ff2c92fd490c5ec0ef92740fa5107da4964908773a9add33da17b4"
+    },
+    {
+      "file": "src/operations.mjs",
+      "passed": true,
+      "sha256": "f8e2d8fcf6810f0d40a6ff6671180d6609dd4f334876c66f78c2dd46df951baf"
+    },
+    {
+      "file": "src/queries.mjs",
+      "passed": true,
+      "sha256": "48b6f269dcd13c8687f74f4a1800548d2de5866d96ab2d5bf94546c540e549da"
+    },
+    {
+      "file": "src/security.mjs",
+      "passed": true,
+      "sha256": "484a56781057edb146ee4737c4e80b1b3eade364d2ec85f9b158fd41f4753b93"
+    },
+    {
+      "file": "src/server.mjs",
+      "passed": true,
+      "sha256": "d2325f0e16432ed7860fee9028643070413b57d9de1d7275d23d877886c811ae"
+    },
+    {
+      "file": "src/support.mjs",
+      "passed": true,
+      "sha256": "2ff7e872a3d82743d07db1dffdecf5526ffe0e806dcf0f3d3c8b5315e22d80ff"
+    },
+    {
+      "file": "src/system.mjs",
+      "passed": true,
+      "sha256": "36ddb452a976f5a2fd677d6c01a3ce559042988b3db40d84974815efa74ff914"
+    },
+    {
+      "file": "src/trading.mjs",
+      "passed": true,
+      "sha256": "0ebd951a65adba264a8c33b19d9ae64fcf22bcd94e7fc467ebad30424d3337ec"
+    },
+    {
+      "file": "tests/acceptance.test.mjs",
+      "passed": true,
+      "sha256": "ddcc53c205d031d59796ef25ca0f276d9ac1a665b40abc71fc5c47973f70d940"
+    },
+    {
+      "file": "tests/recovery-child.mjs",
+      "passed": true,
+      "sha256": "6c8219cc579a820f6a0e352a06bb8da5c603fbf6b4c7c915b13fdc8346a9b6e9"
+    }
+  ],
+  "passed": true
+}

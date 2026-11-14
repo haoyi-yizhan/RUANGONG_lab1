@@ -1,0 +1,8 @@
+node_modules/
+.npm-cache/
+dist/
+data/
+artifacts/
+evidence/
+UML/
+docs/

@@ -4,3 +4,5 @@ lab3/artifacts/
 *.sqlite-wal
 *.sqlite-shm
 *.log
+lab3/node_modules/
+lab3/.npm-cache/

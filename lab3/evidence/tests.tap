@@ -1,190 +1,190 @@
 TAP version 13
-# (node:38988) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (node:13728) ExperimentalWarning: SQLite is an experimental feature and might change at any time
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: registration protects credentials, prevents duplicate identities and supports recovery
 ok 1 - registration protects credentials, prevents duplicate identities and supports recovery
   ---
-  duration_ms: 944.1541
+  duration_ms: 846.2803
   type: 'test'
   ...
 # Subtest: payment is idempotent and unique real-name purchases are enforced
 ok 2 - payment is idempotent and unique real-name purchases are enforced
   ---
-  duration_ms: 366.2411
+  duration_ms: 348.264
   type: 'test'
   ...
 # Subtest: payment expires at 180 seconds and releases inventory
 ok 3 - payment expires at 180 seconds and releases inventory
   ---
-  duration_ms: 460.7029
+  duration_ms: 449.3599
   type: 'test'
   ...
 # Subtest: refund advances waitlist in FIFO order and withdrawal returns full prepayment
 ok 4 - refund advances waitlist in FIFO order and withdrawal returns full prepayment
   ---
-  duration_ms: 624.4815
+  duration_ms: 559.5685
   type: 'test'
   ...
 # Subtest: refund boundary at 7 days
 ok 5 - refund boundary at 7 days
   ---
-  duration_ms: 343.5232
+  duration_ms: 338.9026
   type: 'test'
   ...
 # Subtest: refund boundary at 3 days
 ok 6 - refund boundary at 3 days
   ---
-  duration_ms: 689.7723
+  duration_ms: 450.7123
   type: 'test'
   ...
 # Subtest: refund boundary at 2.999999988425926 days
 ok 7 - refund boundary at 2.999999988425926 days
   ---
-  duration_ms: 791.6221
+  duration_ms: 329.251
   type: 'test'
   ...
 # Subtest: review and order access enforce roles; banning blocks login and operations
 ok 8 - review and order access enforce roles; banning blocks login and operations
   ---
-  duration_ms: 1197.8411
+  duration_ms: 554.7464
   type: 'test'
   ...
 # Subtest: cancellation remains subject to review and refunds paid and waiting orders in full
 ok 9 - cancellation remains subject to review and refunds paid and waiting orders in full
   ---
-  duration_ms: 986.027
+  duration_ms: 438.1288
   type: 'test'
   ...
 # Subtest: an interrupted refund rolls back its payment and ticket state together
 ok 10 - an interrupted refund rolls back its payment and ticket state together
   ---
-  duration_ms: 744.1089
+  duration_ms: 354.019
   type: 'test'
   ...
 # Subtest: unverified HTTP buyer cannot buy or prepay waitlist even with a name and forged verification
 ok 11 - unverified HTTP buyer cannot buy or prepay waitlist even with a name and forged verification
   ---
-  duration_ms: 1298.6791
+  duration_ms: 617.1511
   type: 'test'
   ...
 # Subtest: 50 simultaneous HTTP purchases reserve one seat and queue the other 49
 ok 12 - 50 simultaneous HTTP purchases reserve one seat and queue the other 49
   ---
-  duration_ms: 20422.107
+  duration_ms: 11159.6126
   type: 'test'
   ...
 # Subtest: approved reschedule updates the session and grants a full refund
 ok 13 - approved reschedule updates the session and grants a full refund
   ---
-  duration_ms: 1429.6927
+  duration_ms: 468.4821
   type: 'test'
   ...
 # Subtest: unverified purchase is rejected; failed payment can retry and timeout promotes the waitlist
 ok 14 - unverified purchase is rejected; failed payment can retry and timeout promotes the waitlist
   ---
-  duration_ms: 2276.5055
+  duration_ms: 792.3226
   type: 'test'
   ...
 # Subtest: waitlist deadline refunds prepayment
 ok 15 - waitlist deadline refunds prepayment
   ---
-  duration_ms: 1569.5799
+  duration_ms: 641.8315
   type: 'test'
   ...
 # Subtest: check-in rejects invalid, closed, wrong identity, cancelled and repeated tickets; completion marks attendance and absence
 ok 16 - check-in rejects invalid, closed, wrong identity, cancelled and repeated tickets; completion marks attendance and absence
   ---
-  duration_ms: 4742.2348
+  duration_ms: 921.8162
   type: 'test'
   ...
 # Subtest: roster excludes identity numbers, respects ownership, and audit is immutable
 ok 17 - roster excludes identity numbers, respects ownership, and audit is immutable
   ---
-  duration_ms: 2285.9762
+  duration_ms: 585.5113
   type: 'test'
   ...
 # Subtest: a refunded attendee can buy again and published events cannot be resubmitted for price changes
 ok 18 - a refunded attendee can buy again and published events cannot be resubmitted for price changes
   ---
-  duration_ms: 2562.3973
+  duration_ms: 432.2962
   type: 'test'
   ...
 # Subtest: scheduled event automatically publishes and same user can purchase different sessions
 ok 19 - scheduled event automatically publishes and same user can purchase different sessions
   ---
-  duration_ms: 1511.8845
+  duration_ms: 434.9524
   type: 'test'
   ...
 # Subtest: process termination rolls back an uncommitted order after reopening the database
 ok 20 - process termination rolls back an uncommitted order after reopening the database
   ---
-  duration_ms: 439.9787
+  duration_ms: 283.6669
   type: 'test'
   ...
 # Subtest: downtime replays pending expiry before waitlist deadline, then marks the promoted ticket absent
 ok 21 - downtime replays pending expiry before waitlist deadline, then marks the promoted ticket absent
   ---
-  duration_ms: 1420.1492
+  duration_ms: 674.4553
   type: 'test'
   ...
 # Subtest: approved reschedule handles tickets already checked in
 ok 22 - approved reschedule handles tickets already checked in
   ---
-  duration_ms: 1336.641
+  duration_ms: 724.9508
   type: 'test'
   ...
 # Subtest: approved cancel handles tickets already checked in
 ok 23 - approved cancel handles tickets already checked in
   ---
-  duration_ms: 1447.9426
+  duration_ms: 717.987
   type: 'test'
   ...
 # Subtest: purchased statistics count distinct attendees with issued tickets, excluding withdrawn waitlist entries
 ok 24 - purchased statistics count distinct attendees with issued tickets, excluding withdrawn waitlist entries
   ---
-  duration_ms: 1130.7106
+  duration_ms: 575.0228
   type: 'test'
   ...
 # Subtest: order presentation includes viewer and session data and live FIFO queue positions
 ok 25 - order presentation includes viewer and session data and live FIFO queue positions
   ---
-  duration_ms: 1681.3615
+  duration_ms: 907.9144
   type: 'test'
   ...
 # Subtest: refund preview matches actual refund at 8 days
 ok 26 - refund preview matches actual refund at 8 days
   ---
-  duration_ms: 946.2551
+  duration_ms: 452.2886
   type: 'test'
   ...
 # Subtest: refund preview matches actual refund at 7 days
 ok 27 - refund preview matches actual refund at 7 days
   ---
-  duration_ms: 903.128
+  duration_ms: 456.6046
   type: 'test'
   ...
 # Subtest: refund preview matches actual refund at 3 days
 ok 28 - refund preview matches actual refund at 3 days
   ---
-  duration_ms: 761.3512
+  duration_ms: 455.766
   type: 'test'
   ...
 # Subtest: refund preview matches actual refund at 2.999999988425926 days
 ok 29 - refund preview matches actual refund at 2.999999988425926 days
   ---
-  duration_ms: 779.522
+  duration_ms: 468.6003
   type: 'test'
   ...
 # Subtest: theme and available filters respect matching theme, sale window, deadline and inventory
 ok 30 - theme and available filters respect matching theme, sale window, deadline and inventory
   ---
-  duration_ms: 816.0183
+  duration_ms: 444.4475
   type: 'test'
   ...
 # Subtest: checkin status is restricted to staff and contains aggregate window counts only
 ok 31 - checkin status is restricted to staff and contains aggregate window counts only
   ---
-  duration_ms: 1048.0767
+  duration_ms: 594.9679
   type: 'test'
   ...
 1..31
@@ -195,4 +195,4 @@ ok 31 - checkin status is restricted to staff and contains aggregate window coun
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 58246.4882
+# duration_ms 27697.1171

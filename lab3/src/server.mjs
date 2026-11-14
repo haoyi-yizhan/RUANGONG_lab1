@@ -21,7 +21,7 @@ function json(response, status, body) {
 
 function cookieToken(request) {
   const cookies = (request.headers.cookie || '').split(';');
-  const session = cookies.find(value => value.trim().startsWith('ticket_session='));
+  const session = cookies.find((value) => value.trim().startsWith('ticket_session='));
   return session ? session.trim().slice('ticket_session='.length) : null;
 }
 
@@ -35,8 +35,11 @@ async function readBody(request) {
   }
   try {
     const value = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
-    ensure(value && !Array.isArray(value) && typeof value === 'object',
-      'INVALID_JSON', '请求应为 JSON 对象');
+    ensure(
+      value && !Array.isArray(value) && typeof value === 'object',
+      'INVALID_JSON',
+      '请求应为 JSON 对象',
+    );
     return value;
   } catch (error) {
     if (error instanceof DomainError) {
@@ -55,8 +58,10 @@ export function createApplication({ system, publicDirectory = join(root, 'public
     response.setHeader('Referrer-Policy', 'same-origin');
     response.setHeader('X-Frame-Options', 'DENY');
     response.setHeader('Cache-Control', 'no-store');
-    response.setHeader('Content-Security-Policy',
-      "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
+    response.setHeader(
+      'Content-Security-Policy',
+      "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+    );
     try {
       const host = request.headers.host || '127.0.0.1';
       const url = new URL(request.url, `http://${host}`);
@@ -76,12 +81,24 @@ export function createApplication({ system, publicDirectory = join(root, 'public
       ensure(['GET', 'POST'].includes(method), 'METHOD_NOT_ALLOWED', '不支持该请求方法', 405);
       if (method === 'POST') {
         const origin = request.headers.origin;
-        ensure(!origin || origin === `http://${host}` || origin === `https://${host}`,
-          'ORIGIN_DENIED', '请求来源不受信任', 403);
-        ensure(!request.headers['sec-fetch-site'] || request.headers['sec-fetch-site'] !== 'cross-site',
-          'ORIGIN_DENIED', '不允许跨站请求', 403);
-        ensure((request.headers['content-type'] || '').startsWith('application/json'),
-          'CONTENT_TYPE', '请发送 JSON 格式请求', 415);
+        ensure(
+          !origin || origin === `http://${host}` || origin === `https://${host}`,
+          'ORIGIN_DENIED',
+          '请求来源不受信任',
+          403,
+        );
+        ensure(
+          !request.headers['sec-fetch-site'] || request.headers['sec-fetch-site'] !== 'cross-site',
+          'ORIGIN_DENIED',
+          '不允许跨站请求',
+          403,
+        );
+        ensure(
+          (request.headers['content-type'] || '').startsWith('application/json'),
+          'CONTENT_TYPE',
+          '请发送 JSON 格式请求',
+          415,
+        );
       }
       const body = method === 'POST' ? await readBody(request) : {};
       const token = cookieToken(request);
@@ -90,7 +107,10 @@ export function createApplication({ system, publicDirectory = join(root, 'public
       const filters = Object.fromEntries(url.searchParams);
       let result;
       let match;
-      if (method === 'POST' && ['/api/login', '/api/register', '/api/reset-password'].includes(path)) {
+      if (
+        method === 'POST' &&
+        ['/api/login', '/api/register', '/api/reset-password'].includes(path)
+      ) {
         // Bound expensive password hashing attempts, independently from ticket traffic.
         const key = request.socket.remoteAddress || 'local';
         const now = Date.now();
@@ -103,7 +123,9 @@ export function createApplication({ system, publicDirectory = join(root, 'public
         }
         if (attempts.size > 1000) {
           for (const [address, value] of attempts) {
-            if (now - value.since >= 60000) attempts.delete(address);
+            if (now - value.since >= 60000) {
+              attempts.delete(address);
+            }
           }
         }
       }
@@ -113,11 +135,17 @@ export function createApplication({ system, publicDirectory = join(root, 'public
         result = system.register(body);
       } else if (method === 'POST' && path === '/api/login') {
         const login = system.login(body);
-        response.setHeader('Set-Cookie', `ticket_session=${login.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800`);
+        response.setHeader(
+          'Set-Cookie',
+          `ticket_session=${login.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800`,
+        );
         result = login.user;
       } else if (method === 'POST' && path === '/api/logout') {
         result = system.logout(token);
-        response.setHeader('Set-Cookie', 'ticket_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');
+        response.setHeader(
+          'Set-Cookie',
+          'ticket_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0',
+        );
       } else if (method === 'POST' && path === '/api/reset-password') {
         result = system.resetPassword(body);
       } else if (method === 'POST' && path === '/api/verify') {
@@ -148,14 +176,23 @@ export function createApplication({ system, publicDirectory = join(root, 'public
         result = system.createOrder(actor, body);
       } else if (method === 'GET' && path === '/api/orders') {
         result = system.listOrders(actor, filters);
-      } else if ((match = path.match(/^\/api\/orders\/([^/]+)\/(pay|refund|leave)$/u)) && method === 'POST') {
+      } else if (
+        (match = path.match(/^\/api\/orders\/([^/]+)\/(pay|refund|leave)$/u)) &&
+        method === 'POST'
+      ) {
         const operation = { pay: 'pay', refund: 'refund', leave: 'leaveWaitlist' }[match[2]];
         result = system[operation](actor, match[1], body);
       } else if (method === 'GET' && path === '/api/messages') {
         result = system.listMessages(actor);
-      } else if ((match = path.match(/^\/api\/sessions\/([^/]+)\/statistics$/u)) && method === 'GET') {
+      } else if (
+        (match = path.match(/^\/api\/sessions\/([^/]+)\/statistics$/u)) &&
+        method === 'GET'
+      ) {
         result = system.statistics(actor, match[1]);
-      } else if ((match = path.match(/^\/api\/sessions\/([^/]+)\/checkin-window$/u)) && method === 'POST') {
+      } else if (
+        (match = path.match(/^\/api\/sessions\/([^/]+)\/checkin-window$/u)) &&
+        method === 'POST'
+      ) {
         result = system.openCheckin(actor, match[1]);
       } else if (method === 'POST' && path === '/api/checkin') {
         result = system.checkin(actor, body);
@@ -179,11 +216,16 @@ export function createApplication({ system, publicDirectory = join(root, 'public
         json(response, error.status, { error: { code: error.code, message: error.message } });
       } else {
         console.error('Request failed:', error.message);
-        const busy = String(error.code).includes('BUSY') || /database is locked/u.test(error.message);
-        json(response, busy ? 503 : 500, { error: {
-          code: busy ? 'TEMPORARILY_BUSY' : 'INTERNAL_ERROR',
-          message: busy ? '系统繁忙，请稍后重试；未完成的操作已回退' : '操作失败，未完成的修改已回退',
-        } });
+        const busy =
+          String(error.code).includes('BUSY') || /database is locked/u.test(error.message);
+        json(response, busy ? 503 : 500, {
+          error: {
+            code: busy ? 'TEMPORARILY_BUSY' : 'INTERNAL_ERROR',
+            message: busy
+              ? '系统繁忙，请稍后重试；未完成的操作已回退'
+              : '操作失败，未完成的修改已回退',
+          },
+        });
       }
     }
   });
@@ -210,7 +252,7 @@ function start() {
     console.log(`活动票务与报名系统已启动：http://127.0.0.1:${port}`);
     console.log(`数据库：${filename}`);
   });
-  server.on('error', error => {
+  server.on('error', (error) => {
     clearInterval(timer);
     system.close();
     console.error(`启动失败：${error.message}`);

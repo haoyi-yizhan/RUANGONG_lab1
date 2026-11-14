@@ -1,6 +1,6 @@
 import { ensure, timestamp } from './errors.mjs';
 
-const iso = value => new Date(value).toISOString();
+const iso = (value) => new Date(value).toISOString();
 const ORDER_COLUMNS = `o.*,e.title,s.starts_at,s.location,s.deadline,t.name AS tier_name,u.name AS viewer_name,
   CASE WHEN o.state='waiting' THEN (
     SELECT COUNT(*) FROM waitlist w JOIN orders queued ON queued.id=w.order_id
@@ -14,28 +14,51 @@ export const queryMethods = {
   remaining(tierId) {
     const tier = this.db.prepare('SELECT capacity FROM tiers WHERE id=?').get(tierId);
     ensure(tier, 'NOT_FOUND', '票档不存在', 404);
-    const occupied = this.db.prepare(`SELECT COUNT(*) AS n FROM orders WHERE tier_id=?
-      AND state IN ('pending','issued','checked_in','redeemed','absent')`).get(tierId).n;
+    const occupied = this.db
+      .prepare(
+        `SELECT COUNT(*) AS n FROM orders WHERE tier_id=?
+      AND state IN ('pending','issued','checked_in','redeemed','absent')`,
+      )
+      .get(tierId).n;
     return tier.capacity - occupied;
   },
 
   eventView(row) {
-    const sessions = this.db.prepare('SELECT * FROM sessions WHERE event_id=? ORDER BY starts_at,id')
-      .all(row.id).map(session => ({
-        id: session.id, startsAt: iso(session.starts_at), endsAt: iso(session.ends_at),
-        location: session.location, saleAt: iso(session.sale_at), deadline: iso(session.deadline),
+    const sessions = this.db
+      .prepare('SELECT * FROM sessions WHERE event_id=? ORDER BY starts_at,id')
+      .all(row.id)
+      .map((session) => ({
+        id: session.id,
+        startsAt: iso(session.starts_at),
+        endsAt: iso(session.ends_at),
+        location: session.location,
+        saleAt: iso(session.sale_at),
+        deadline: iso(session.deadline),
         checkinOpen: Boolean(session.checkin_open),
-        tiers: this.db.prepare('SELECT * FROM tiers WHERE session_id=? ORDER BY price_cents,id')
-          .all(session.id).map(tier => ({
-            id: tier.id, name: tier.name, priceCents: tier.price_cents,
-            capacity: tier.capacity, remaining: this.remaining(tier.id),
+        tiers: this.db
+          .prepare('SELECT * FROM tiers WHERE session_id=? ORDER BY price_cents,id')
+          .all(session.id)
+          .map((tier) => ({
+            id: tier.id,
+            name: tier.name,
+            priceCents: tier.price_cents,
+            capacity: tier.capacity,
+            remaining: this.remaining(tier.id),
           })),
       }));
     return {
-      id: row.id, organizerId: row.organizer_id, title: row.title, kind: row.kind,
-      speaker: row.speaker, theme: row.theme, status: row.status, publishAt: iso(row.publish_at),
-      rejection: row.rejection, sessions,
-      rules: '每账号每场次限一张；3分钟内支付；候补预付全款；超过7天退票手续费20%，3～7天40%，不足3天不可退；改期获准的原订单可全额退。',
+      id: row.id,
+      organizerId: row.organizer_id,
+      title: row.title,
+      kind: row.kind,
+      speaker: row.speaker,
+      theme: row.theme,
+      status: row.status,
+      publishAt: iso(row.publish_at),
+      rejection: row.rejection,
+      sessions,
+      rules:
+        '每账号每场次限一张；3分钟内支付；候补预付全款；超过7天退票手续费20%，3～7天40%，不足3天不可退；改期获准的原订单可全额退。',
     };
   },
 
@@ -53,7 +76,11 @@ export const queryMethods = {
       clauses.push('e.id=?');
       values.push(filters.id);
     }
-    for (const [key, column] of [['keyword', 'e.title || e.theme'], ['speaker', 'e.speaker'], ['theme', 'e.theme']]) {
+    for (const [key, column] of [
+      ['keyword', 'e.title || e.theme'],
+      ['speaker', 'e.speaker'],
+      ['theme', 'e.theme'],
+    ]) {
       if (filters[key]) {
         clauses.push(`instr(lower(${column}),lower(?))>0`);
         values.push(String(filters[key]).slice(0, 200));
@@ -81,8 +108,13 @@ export const queryMethods = {
           AND o.state IN ('pending','issued','checked_in','redeemed','absent')))`);
       values.push(this.now(), this.now());
     }
-    return this.db.prepare(`SELECT e.* FROM events e WHERE ${clauses.join(' AND ')}
-      ORDER BY e.created_at DESC,e.id LIMIT 200`).all(...values).map(row => this.eventView(row));
+    return this.db
+      .prepare(
+        `SELECT e.* FROM events e WHERE ${clauses.join(' AND ')}
+      ORDER BY e.created_at DESC,e.id LIMIT 200`,
+      )
+      .all(...values)
+      .map((row) => this.eventView(row));
   },
 
   getEvent(actorId, eventId) {
@@ -99,21 +131,35 @@ export const queryMethods = {
   },
 
   orderView(orderId) {
-    const row = this.db.prepare(`SELECT ${ORDER_COLUMNS} FROM ${ORDER_TABLES} WHERE o.id=?`).get(orderId);
+    const row = this.db
+      .prepare(`SELECT ${ORDER_COLUMNS} FROM ${ORDER_TABLES} WHERE o.id=?`)
+      .get(orderId);
     ensure(row, 'NOT_FOUND', '订单不存在', 404);
     return this.mapOrder(row);
   },
 
   mapOrder(row) {
     return {
-      id: row.id, userId: row.user_id, tierId: row.tier_id, sessionId: row.session_id,
-      eventTitle: row.title, tierName: row.tier_name, startsAt: iso(row.starts_at), state: row.state,
-      priceCents: row.price_cents, paidCents: row.paid_cents, refundCents: row.refund_cents,
+      id: row.id,
+      userId: row.user_id,
+      tierId: row.tier_id,
+      sessionId: row.session_id,
+      eventTitle: row.title,
+      tierName: row.tier_name,
+      startsAt: iso(row.starts_at),
+      state: row.state,
+      priceCents: row.price_cents,
+      paidCents: row.paid_cents,
+      refundCents: row.refund_cents,
       seat: row.seat === null ? null : `${row.tier_name}-${String(row.seat).padStart(4, '0')}`,
-      code: row.code, paymentDeadline: iso(row.payment_deadline), fullRefund: Boolean(row.full_refund),
+      code: row.code,
+      paymentDeadline: iso(row.payment_deadline),
+      fullRefund: Boolean(row.full_refund),
       createdAt: iso(row.created_at),
-      location: row.location, viewerName: row.viewer_name,
-      registrationDeadline: iso(row.deadline), waitlistPosition: row.queue_position,
+      location: row.location,
+      viewerName: row.viewer_name,
+      registrationDeadline: iso(row.deadline),
+      waitlistPosition: row.queue_position,
       refundPreview: this.refundQuote(row, row.starts_at),
     };
   },
@@ -125,7 +171,12 @@ export const queryMethods = {
     if (actor.role === 'participant') {
       clauses.push('o.user_id=?');
       values.push(actor.id);
-      ensure(!filters.userId || filters.userId === actor.id, 'FORBIDDEN', '只能查询自己的订单', 403);
+      ensure(
+        !filters.userId || filters.userId === actor.id,
+        'FORBIDDEN',
+        '只能查询自己的订单',
+        403,
+      );
     } else if (filters.userId) {
       clauses.push('o.user_id=?');
       values.push(filters.userId);
@@ -135,8 +186,12 @@ export const queryMethods = {
       values.push(filters.id);
     }
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
-    return this.db.prepare(`SELECT ${ORDER_COLUMNS} FROM ${ORDER_TABLES}
-      ${where} ORDER BY o.created_at DESC,o.rowid DESC LIMIT 500`)
-      .all(...values).map(row => this.mapOrder(row));
+    return this.db
+      .prepare(
+        `SELECT ${ORDER_COLUMNS} FROM ${ORDER_TABLES}
+      ${where} ORDER BY o.created_at DESC,o.rowid DESC LIMIT 500`,
+      )
+      .all(...values)
+      .map((row) => this.mapOrder(row));
   },
 };

@@ -20,7 +20,7 @@ $folderName = "实验3_${StudentId}_${StudentName}"
 $submission = Join-Path $runRoot $folderName
 $codeRoot = Join-Path $submission 'code'
 New-Item -ItemType Directory -Path $codeRoot -Force | Out-Null
-foreach ($name in @('src','public','scripts','tests','docs','evidence','package.json','README.md','启动系统.cmd')) {
+foreach ($name in @('src','public','scripts','tests','docs','evidence','package.json','package-lock.json','eslint.config.mjs','.prettierrc.json','.prettierignore','README.md','启动系统.cmd')) {
     Copy-Item -LiteralPath (Join-Path $labRoot $name) -Destination $codeRoot -Recurse
 }
 Copy-Item -LiteralPath (Join-Path $labRoot 'UML') -Destination $submission -Recurse
